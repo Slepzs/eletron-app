@@ -10,6 +10,7 @@ import type {
 export type AgentKind = "claude" | "codex";
 export type AgentRole = "implementer" | "planner" | "reviewer";
 export type AgentSessionStatus = "completed" | "failed" | "interrupted" | "pending" | "running";
+export type AgentOutputChannel = "stderr" | "stdout";
 
 export type RunStage = "complete" | "implementing" | "planning" | "reviewing" | "verifying";
 export type RunStatus = "blocked" | "failed" | "in_progress" | "succeeded";
@@ -26,12 +27,11 @@ export type ArtifactKind =
 
 export type VerificationCheckKind = "lint" | "policy" | "smoke" | "tests" | "typecheck";
 export type VerificationCheckStatus = "failed" | "passed" | "skipped";
+export type VerificationResultStatus = Extract<VerificationCheckStatus, "failed" | "passed">;
 export type VerdictStatus = "accepted" | "needs_retry" | "rejected";
 
 export type ApprovalKind = "command" | "file" | "network" | "policy";
 export type ApprovalDecision = "approved" | "pending" | "rejected";
-
-export type HandoffSectionKey = "ASSUMPTIONS" | "CHANGES" | "PLAN" | "REQUESTED_ACTION" | "RISKS";
 
 export interface Task {
   readonly taskId: TaskId;
@@ -86,7 +86,7 @@ export interface VerificationCheckResult {
 export interface VerificationResult {
   readonly verificationResultId: VerificationResultId;
   readonly runId: RunId;
-  readonly status: Exclude<VerificationCheckStatus, "skipped">;
+  readonly status: VerificationResultStatus;
   readonly checks: readonly VerificationCheckResult[];
   readonly completedAt: string;
 }
@@ -108,8 +108,4 @@ export interface ApprovalRequest {
   readonly requestedAt: string;
   readonly resolvedAt?: string;
   readonly decision: ApprovalDecision;
-}
-
-export interface StructuredHandoff {
-  readonly sections: Readonly<Record<HandoffSectionKey, string>>;
 }

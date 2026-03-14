@@ -5,11 +5,23 @@ import type {
   StartAgentSessionInput,
   Unsubscribe,
 } from "@iamrobot/agent-sdk";
-import { createEntityId } from "@iamrobot/protocol";
+import type { AgentSession } from "@iamrobot/protocol";
+import { createEntityId, createTimestamp } from "@iamrobot/protocol";
 
-function createPlaceholderSessionHandle(): AgentSessionHandle {
+function createPlaceholderSessionHandle(input: StartAgentSessionInput): AgentSessionHandle {
+  const sessionId = createEntityId("agent-session", "codex-placeholder");
+  const session: AgentSession = {
+    sessionId,
+    runId: input.run.runId,
+    adapter: "codex",
+    role: input.role,
+    status: "running",
+    startedAt: createTimestamp(),
+  };
+
   return {
-    sessionId: createEntityId("agent-session", "codex-placeholder"),
+    session,
+    sessionId,
     async sendMessage(): Promise<void> {
       throw new Error("Codex CLI session messaging is not implemented yet.");
     },
@@ -28,11 +40,14 @@ function createPlaceholderSessionHandle(): AgentSessionHandle {
 export class CodexCliAdapter implements AgentAdapter {
   readonly kind = "codex" as const;
 
-  async startSession(_input: StartAgentSessionInput): Promise<AgentSessionHandle> {
-    return createPlaceholderSessionHandle();
+  async startSession(input: StartAgentSessionInput): Promise<AgentSessionHandle> {
+    return createPlaceholderSessionHandle(input);
   }
 
-  async streamEvents(_sessionId: string, _onEvent: AgentEventSubscriber): Promise<Unsubscribe> {
+  async streamEvents(
+    _sessionId: AgentSessionHandle["sessionId"],
+    _onEvent: AgentEventSubscriber,
+  ): Promise<Unsubscribe> {
     return () => undefined;
   }
 }

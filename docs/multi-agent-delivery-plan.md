@@ -61,6 +61,21 @@ Must define:
 - structured handoff format
 - preload-facing runtime API shape if needed for downstream desktop work
 
+Concrete contract outputs for this phase:
+
+- `@iamrobot/protocol`
+  - workflow contracts such as `AgentRoleAssignments`, `RunStageTransition`, and stage helpers
+  - handoff contracts such as `StructuredHandoff` and `StructuredHandoffSpec`
+  - runtime view contracts such as `RuntimeSnapshot` and `RuntimeRunDetails`
+- `@iamrobot/agent-sdk`
+  - `StartAgentSessionInput`
+  - `AgentSessionHandle`
+  - `AgentStreamEvent`
+  - `AgentAdapter`
+- `@iamrobot/orchestration`
+  - `OrchestrationRuntime`
+  - typed run control inputs and outputs
+
 Non-goals:
 
 - full adapter implementation

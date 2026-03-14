@@ -5,11 +5,23 @@ import type {
   StartAgentSessionInput,
   Unsubscribe,
 } from "@iamrobot/agent-sdk";
-import { createEntityId } from "@iamrobot/protocol";
+import type { AgentSession } from "@iamrobot/protocol";
+import { createEntityId, createTimestamp } from "@iamrobot/protocol";
 
-function createPlaceholderSessionHandle(): AgentSessionHandle {
+function createPlaceholderSessionHandle(input: StartAgentSessionInput): AgentSessionHandle {
+  const sessionId = createEntityId("agent-session", "claude-placeholder");
+  const session: AgentSession = {
+    sessionId,
+    runId: input.run.runId,
+    adapter: "claude",
+    role: input.role,
+    status: "running",
+    startedAt: createTimestamp(),
+  };
+
   return {
-    sessionId: createEntityId("agent-session", "claude-placeholder"),
+    session,
+    sessionId,
     async sendMessage(): Promise<void> {
       throw new Error("Claude Code session messaging is not implemented yet.");
     },
@@ -28,11 +40,14 @@ function createPlaceholderSessionHandle(): AgentSessionHandle {
 export class ClaudeCodeAdapter implements AgentAdapter {
   readonly kind = "claude" as const;
 
-  async startSession(_input: StartAgentSessionInput): Promise<AgentSessionHandle> {
-    return createPlaceholderSessionHandle();
+  async startSession(input: StartAgentSessionInput): Promise<AgentSessionHandle> {
+    return createPlaceholderSessionHandle(input);
   }
 
-  async streamEvents(_sessionId: string, _onEvent: AgentEventSubscriber): Promise<Unsubscribe> {
+  async streamEvents(
+    _sessionId: AgentSessionHandle["sessionId"],
+    _onEvent: AgentEventSubscriber,
+  ): Promise<Unsubscribe> {
     return () => undefined;
   }
 }

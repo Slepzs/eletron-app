@@ -161,6 +161,13 @@ Adapters normalize:
 
 Adapters should not own orchestration logic.
 
+Phase 0 should lock the adapter boundary around shared contracts such as:
+
+- `StartAgentSessionInput`
+- `AgentSessionHandle`
+- `AgentStreamEvent`
+- `StructuredHandoffSpec`
+
 ### Shared Protocol
 
 The app should define a strict internal event and state model instead of treating free-form prose as a system boundary.
@@ -193,6 +200,12 @@ Suggested `Verdict` fields:
 - `blockingIssues`
 - `proposedNextAction`
 - `confidence`
+
+Phase 0 should also expose preload-safe runtime read models such as:
+
+- `RuntimeSnapshot`
+- `RuntimeRunDetails`
+- stable run and task identifiers for subscriptions and detail lookups
 
 ### Verification Engine
 
