@@ -10,8 +10,8 @@ import type {
   Verdict,
   VerificationCheckKind,
   VerificationResult,
-} from "./domain";
-import type { StructuredHandoff } from "./handoff";
+} from "./domain.js";
+import type { StructuredHandoff } from "./handoff.js";
 
 export type DomainEventType =
   | "agent.handoff.received"

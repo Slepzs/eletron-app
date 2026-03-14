@@ -1,1 +1,1 @@
-export * from "./claude-code-adapter";
+export * from "./claude-code-adapter.js";

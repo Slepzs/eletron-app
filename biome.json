@@ -2,6 +2,7 @@
   "files": {
     "includes": [
       "apps/**",
+      "!apps/**/dist/**",
       "packages/**",
       "package.json",
       "turbo.json",

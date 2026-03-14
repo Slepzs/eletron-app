@@ -1,6 +1,6 @@
 import type { VerificationCheckKind } from "@iamrobot/protocol";
 
-import type { VerificationCommand, VerificationProfile } from "./types";
+import type { VerificationCommand, VerificationProfile } from "./types.js";
 
 export const DEFAULT_VERIFICATION_PROFILE_NAME = "default";
 

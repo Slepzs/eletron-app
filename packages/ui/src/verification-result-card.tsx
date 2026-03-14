@@ -20,7 +20,7 @@ export function VerificationResultCard({ result }: VerificationResultCardProps) 
               justifyContent: "space-between",
             }}
           >
-            <p style={{ color: "#cbd5e1", margin: 0 }}>
+            <p style={{ color: "#cbd5e1", fontSize: "0.9rem", lineHeight: 1.6, margin: 0 }}>
               Completed {formatTimestamp(result.completedAt)}
             </p>
             <span
@@ -69,7 +69,9 @@ export function VerificationResultCard({ result }: VerificationResultCardProps) 
                     {check.status}
                   </span>
                 </div>
-                <p style={{ color: "#cbd5e1", margin: "0.45rem 0 0" }}>{check.summary}</p>
+                <p style={{ color: "#cbd5e1", fontSize: "0.9rem", lineHeight: 1.6, margin: "0.45rem 0 0" }}>
+                  {check.summary}
+                </p>
                 <code
                   style={{
                     color: "#7dd3fc",
@@ -86,9 +88,7 @@ export function VerificationResultCard({ result }: VerificationResultCardProps) 
           </div>
         </div>
       ) : (
-        <p style={{ color: "#94a3b8", margin: 0 }}>
-          Verification has not completed for this run yet.
-        </p>
+        <p style={{ color: "#475569", fontSize: "0.82rem", margin: 0 }}>—</p>
       )}
     </SectionCard>
   );

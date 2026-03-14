@@ -20,7 +20,9 @@ export function VerdictCard({ verdict }: VerdictCardProps) {
               justifyContent: "space-between",
             }}
           >
-            <p style={{ color: "#cbd5e1", margin: 0 }}>{verdict.summary}</p>
+            <p style={{ color: "#cbd5e1", fontSize: "0.9rem", lineHeight: 1.6, margin: 0 }}>
+              {verdict.summary}
+            </p>
             <span
               style={{
                 border: `1px solid ${getVerdictColor(verdict.status)}`,
@@ -74,9 +76,7 @@ export function VerdictCard({ verdict }: VerdictCardProps) {
           </dl>
         </div>
       ) : (
-        <p style={{ color: "#94a3b8", margin: 0 }}>
-          No verdict has been recorded for this run yet.
-        </p>
+        <p style={{ color: "#475569", fontSize: "0.82rem", margin: 0 }}>—</p>
       )}
     </SectionCard>
   );

@@ -6,8 +6,8 @@ import { prepareIsolatedWorktree } from "@iamrobot/git";
 import { createOrchestrationRuntime } from "@iamrobot/orchestration";
 import { createDefaultVerificationProfile, createVerificationRunner } from "@iamrobot/verification";
 
-import { createDesktopPersistenceStore } from "./persistence";
-import { DefaultDesktopRuntimeService, type DesktopRuntimeService } from "./runtime-service";
+import { createDesktopPersistenceStore } from "./persistence.js";
+import { DefaultDesktopRuntimeService, type DesktopRuntimeService } from "./runtime-service.js";
 
 export interface CreateDesktopRuntimeServiceInput {
   readonly userDataPath: string;

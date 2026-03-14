@@ -6,8 +6,8 @@ import type {
   Task,
   Verdict,
   VerificationResult,
-} from "./domain";
-import type { DomainEvent } from "./events";
+} from "./domain.js";
+import type { DomainEvent } from "./events.js";
 
 export interface RuntimeRunSummary {
   readonly task: Task;

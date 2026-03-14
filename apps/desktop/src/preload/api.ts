@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 import { ipcRenderer } from "electron";
 
 import {
@@ -6,13 +5,11 @@ import {
   type DesktopRunEventPayload,
   type DesktopSnapshotEventPayload,
   desktopIpcChannels,
-} from "../shared/desktop-api";
-import { getDesktopSeedState } from "../shared/seed-state";
+} from "../shared/desktop-api.js";
 
-export type { DesktopApi } from "../shared/desktop-api";
+export type { DesktopApi } from "../shared/desktop-api.js";
 
 export const desktopApi: DesktopApi = {
-  getSeedState: getDesktopSeedState,
   listRuns: () => ipcRenderer.invoke(desktopIpcChannels.listRuns),
   getRunDetails: (runId) => ipcRenderer.invoke(desktopIpcChannels.getRunDetails, runId),
   createTask: (input) => ipcRenderer.invoke(desktopIpcChannels.createTask, input),
@@ -20,8 +17,9 @@ export const desktopApi: DesktopApi = {
   resolveApproval: (input) => ipcRenderer.invoke(desktopIpcChannels.resolveApproval, input),
   retryRun: (input) => ipcRenderer.invoke(desktopIpcChannels.retryRun, input),
   cancelRun: (runId) => ipcRenderer.invoke(desktopIpcChannels.cancelRun, runId),
+  selectDirectory: () => ipcRenderer.invoke(desktopIpcChannels.selectDirectory),
   async subscribeToSnapshot(onSnapshot) {
-    const subscriptionId = randomUUID();
+    const subscriptionId = globalThis.crypto.randomUUID();
     const listener = (_event: Electron.IpcRendererEvent, payload: DesktopSnapshotEventPayload) => {
       if (payload.subscriptionId === subscriptionId) {
         onSnapshot(payload.snapshot);
@@ -47,7 +45,7 @@ export const desktopApi: DesktopApi = {
     };
   },
   async subscribeToRun(runId, onEvent) {
-    const subscriptionId = randomUUID();
+    const subscriptionId = globalThis.crypto.randomUUID();
     const listener = (_event: Electron.IpcRendererEvent, payload: DesktopRunEventPayload) => {
       if (payload.subscriptionId === subscriptionId) {
         onEvent(payload.event);

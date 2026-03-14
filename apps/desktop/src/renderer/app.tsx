@@ -8,6 +8,96 @@ import { TaskComposer } from "./components/task-composer";
 import { useRuntimeSnapshot } from "./hooks/use-runtime-snapshot";
 import { useSelectedRunDetails } from "./hooks/use-selected-run-details";
 
+function MetricPill({ label, value }: { label: string; value: string }) {
+  return (
+    <div
+      style={{
+        alignItems: "center",
+        background: "rgba(15, 23, 42, 0.6)",
+        border: "1px solid rgba(148, 163, 184, 0.18)",
+        borderRadius: "var(--radius-md)",
+        display: "flex",
+        gap: "0.4rem",
+        padding: "0.3rem 0.65rem",
+      }}
+    >
+      <span style={{ color: "#64748b", fontSize: "0.72rem" }}>{label}</span>
+      <span style={{ color: "#e2e8f0", fontSize: "0.78rem", fontWeight: 700 }}>{value}</span>
+    </div>
+  );
+}
+
+interface AppBarProps {
+  readonly snapshot: ReturnType<typeof useRuntimeSnapshot>["snapshot"];
+  readonly runDetails: ReturnType<typeof useSelectedRunDetails>;
+}
+
+function AppBar({ snapshot, runDetails }: AppBarProps) {
+  const activeGoal =
+    snapshot.runs.find((s) => s.run.runId === snapshot.activeRunId)?.task.goal ?? "Idle";
+
+  const blockedCount = String(
+    runDetails.details?.approvalRequests.filter((r) => r.decision === "pending").length ?? 0,
+  );
+
+  return (
+    <div
+      style={{
+        alignItems: "center",
+        borderBottom: "1px solid rgba(148, 163, 184, 0.12)",
+        display: "flex",
+        gap: "1.5rem",
+        height: "64px",
+        justifyContent: "space-between",
+        padding: "0 2.5rem",
+      }}
+    >
+      <div style={{ alignItems: "center", display: "flex", flexShrink: 0, gap: "0.75rem" }}>
+        <span
+          style={{
+            color: "#7dd3fc",
+            fontFamily: "ui-monospace, monospace",
+            fontSize: "0.72rem",
+            fontWeight: 700,
+            letterSpacing: "0.14em",
+            textTransform: "uppercase",
+          }}
+        >
+          IAM ROBOT
+        </span>
+        <div
+          style={{
+            background: "rgba(148, 163, 184, 0.25)",
+            height: "16px",
+            width: "1px",
+          }}
+        />
+        <span style={{ color: "#64748b", fontSize: "0.72rem", letterSpacing: "0.04em" }}>
+          Control Room
+        </span>
+      </div>
+      <span
+        style={{
+          color: snapshot.activeRunId ? "#e2e8f0" : "#64748b",
+          flex: 1,
+          fontSize: "0.82rem",
+          overflow: "hidden",
+          textAlign: "center",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {snapshot.activeRunId ? activeGoal : "Idle"}
+      </span>
+      <div style={{ alignItems: "center", display: "flex", flexShrink: 0, gap: "0.5rem" }}>
+        <MetricPill label="Runs" value={String(snapshot.runs.length)} />
+        <MetricPill label="Active" value={snapshot.activeRunId ? "1" : "0"} />
+        <MetricPill label="Blocked" value={blockedCount} />
+      </div>
+    </div>
+  );
+}
+
 export function App() {
   const [actionError, setActionError] = useState<string | null>(null);
   const [taskError, setTaskError] = useState<string | null>(null);
@@ -90,102 +180,34 @@ export function App() {
   }
 
   return (
-    <main
+    <div
       style={{
         background:
           "radial-gradient(circle at top left, rgba(56, 189, 248, 0.2), transparent 30%), radial-gradient(circle at top right, rgba(20, 184, 166, 0.18), transparent 28%), #020617",
         color: "#e2e8f0",
         fontFamily: '"SF Pro Display", "Inter Variable", ui-sans-serif, system-ui, sans-serif',
         minHeight: "100vh",
-        padding: "2.5rem",
       }}
     >
-      <div
+      <header>
+        <AppBar runDetails={runDetails} snapshot={snapshot} />
+      </header>
+      <main
         style={{
           margin: "0 auto",
           maxWidth: "1480px",
+          padding: "1.25rem 2.5rem 2.5rem",
         }}
       >
-        <section
-          style={{
-            alignItems: "end",
-            display: "flex",
-            flexWrap: "wrap",
-            gap: "1.5rem",
-            justifyContent: "space-between",
-            marginBottom: "2rem",
-          }}
-        >
-          <div>
-            <p
-              style={{
-                color: "#7dd3fc",
-                fontSize: "0.8rem",
-                fontWeight: 700,
-                letterSpacing: "0.16em",
-                margin: 0,
-                textTransform: "uppercase",
-              }}
-            >
-              IAM Robot
-            </p>
-            <h1
-              style={{
-                fontSize: "clamp(2.4rem, 5vw, 4.8rem)",
-                lineHeight: 0.95,
-                margin: "0.9rem 0 1rem",
-                maxWidth: "11ch",
-              }}
-            >
-              Runtime-backed desktop control room.
-            </h1>
-            <p
-              style={{
-                color: "#94a3b8",
-                fontSize: "1rem",
-                lineHeight: 1.7,
-                margin: 0,
-                maxWidth: "72ch",
-              }}
-            >
-              The renderer now reflects the real local runtime: task creation, run history,
-              approvals, artifacts, verification, verdicts, and the full event timeline all flow
-              through the typed preload bridge.
-            </p>
-          </div>
-          <div
-            style={{
-              backdropFilter: "blur(16px)",
-              background: "rgba(8, 15, 28, 0.62)",
-              border: "1px solid rgba(148, 163, 184, 0.18)",
-              borderRadius: "24px",
-              display: "grid",
-              gap: "0.75rem",
-              minWidth: "280px",
-              padding: "1.25rem 1.4rem",
-            }}
-          >
-            <Metric label="Runs" value={`${snapshot.runs.length}`} />
-            <Metric label="Active run" value={snapshot.activeRunId ? "1" : "0"} />
-            <Metric
-              label="Blocked approvals"
-              value={`${
-                runDetails.details?.approvalRequests.filter(
-                  (request) => request.decision === "pending",
-                ).length ?? 0
-              }`}
-            />
-          </div>
-        </section>
         {snapshotError || actionError ? (
           <p
             role="alert"
             style={{
               background: "rgba(127, 29, 29, 0.25)",
               border: "1px solid rgba(248, 113, 113, 0.35)",
-              borderRadius: "16px",
+              borderRadius: "var(--radius-md)",
               color: "#fecaca",
-              margin: "0 0 1.5rem",
+              margin: "0 0 1rem",
               padding: "1rem 1.1rem",
             }}
           >
@@ -200,7 +222,7 @@ export function App() {
             gap: "1.25rem",
           }}
         >
-          <aside style={{ display: "grid", flex: "1 1 340px", gap: "1rem", maxWidth: "380px" }}>
+          <aside style={{ display: "grid", flex: "1 1 360px", gap: "1rem", maxWidth: "400px" }}>
             <TaskComposer busy={taskBusy} error={taskError} onSubmit={handleCreateTask} />
             <RunListCard onSelectRun={selectRun} runs={sortedRuns} selectedRunId={selectedRunId} />
           </aside>
@@ -221,31 +243,7 @@ export function App() {
             />
           </div>
         </section>
-      </div>
-    </main>
-  );
-}
-
-interface MetricProps {
-  readonly label: string;
-  readonly value: string;
-}
-
-function Metric({ label, value }: MetricProps) {
-  return (
-    <div>
-      <p
-        style={{
-          color: "#64748b",
-          fontSize: "0.74rem",
-          letterSpacing: "0.08em",
-          margin: 0,
-          textTransform: "uppercase",
-        }}
-      >
-        {label}
-      </p>
-      <p style={{ fontSize: "1.65rem", fontWeight: 700, margin: "0.35rem 0 0" }}>{value}</p>
+      </main>
     </div>
   );
 }

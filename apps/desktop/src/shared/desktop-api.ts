@@ -15,8 +15,6 @@ import type {
   Task,
 } from "@iamrobot/protocol";
 
-import type { DesktopSeedState } from "./seed-state";
-
 export const desktopIpcChannels = {
   cancelRun: "desktop-runtime:cancel-run",
   createTask: "desktop-runtime:create-task",
@@ -25,6 +23,7 @@ export const desktopIpcChannels = {
   resolveApproval: "desktop-runtime:resolve-approval",
   retryRun: "desktop-runtime:retry-run",
   runEvent: "desktop-runtime:run-event",
+  selectDirectory: "desktop-runtime:select-directory",
   startRun: "desktop-runtime:start-run",
   subscribeToRun: "desktop-runtime:subscribe-run",
   subscribeToSnapshot: "desktop-runtime:subscribe-snapshot",
@@ -59,7 +58,6 @@ export interface DesktopRunEventPayload {
 }
 
 export interface DesktopApi {
-  getSeedState(): DesktopSeedState;
   listRuns(): Promise<RuntimeSnapshot>;
   getRunDetails(runId: RunId): Promise<RuntimeRunDetails | null>;
   createTask(input: CreateTaskInput): Promise<Task>;
@@ -67,6 +65,7 @@ export interface DesktopApi {
   resolveApproval(input: ResolveApprovalInput): Promise<ApprovalRequest | null>;
   retryRun(input: RetryRunInput): Promise<Run | null>;
   cancelRun(runId: RunId): Promise<Run | null>;
+  selectDirectory(): Promise<string | null>;
   subscribeToSnapshot(onSnapshot: DesktopSnapshotSubscriber): Promise<DesktopSubscription>;
   subscribeToRun(runId: RunId, onEvent: DesktopRunEventSubscriber): Promise<DesktopSubscription>;
 }

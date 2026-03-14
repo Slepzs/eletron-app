@@ -40,22 +40,22 @@ import type {
   RuntimeSubscription,
   StartRunInput,
   StartRunResult,
-} from "./contracts";
+} from "./contracts.js";
 import {
   advanceRunStage,
   attachVerdict,
   createRunRecord,
   createTaskDefinition,
   getDefaultRoleAssignments,
-} from "./helpers";
-import { buildImplementationPrompt, buildPlanningPrompt, buildReviewPrompt } from "./prompts";
+} from "./helpers.js";
+import { buildImplementationPrompt, buildPlanningPrompt, buildReviewPrompt } from "./prompts.js";
 import {
   createAcceptedVerdict,
   createCancelledVerdict,
   createReviewVerdict,
   createStageFailureVerdict,
   createVerificationFailureVerdict,
-} from "./verdicts";
+} from "./verdicts.js";
 
 interface ActiveRunState {
   readonly task: Task;

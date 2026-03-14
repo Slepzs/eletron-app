@@ -51,8 +51,17 @@ interface OverviewFieldProps {
 function OverviewField({ label, value }: OverviewFieldProps) {
   return (
     <div>
-      <dt style={{ color: "#94a3b8", fontSize: "0.78rem" }}>{label}</dt>
-      <dd style={{ margin: "0.25rem 0 0" }}>{value}</dd>
+      <dt
+        style={{
+          color: "#64748b",
+          fontSize: "0.68rem",
+          letterSpacing: "0.06em",
+          textTransform: "uppercase",
+        }}
+      >
+        {label}
+      </dt>
+      <dd style={{ fontSize: "0.88rem", margin: "0.25rem 0 0" }}>{value}</dd>
     </div>
   );
 }

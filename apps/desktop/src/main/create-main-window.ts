@@ -4,7 +4,7 @@ import { BrowserWindow } from "electron";
 
 export function createMainWindow() {
   const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
-  const preloadPath = path.join(currentDirectory, "../preload/index.js");
+  const preloadPath = path.join(currentDirectory, "../../dist/preload/index.js");
 
   return new BrowserWindow({
     width: 1440,

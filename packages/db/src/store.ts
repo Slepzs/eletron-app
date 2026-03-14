@@ -11,7 +11,7 @@ import {
   createPersistenceRepositories,
   type PersistenceDatabase,
   type PersistenceRepositories,
-} from "./repositories";
+} from "./repositories.js";
 
 export interface PersistenceStore extends PersistenceRepositories {
   listRuns(): Promise<RuntimeSnapshot>;

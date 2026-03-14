@@ -14,14 +14,14 @@ import type {
 } from "@iamrobot/agent-sdk";
 import type { AgentSession, AgentSessionStatus, Artifact } from "@iamrobot/protocol";
 import { createEntityId, createTimestamp } from "@iamrobot/protocol";
-import { createClaudeArgs, createClaudePrompt } from "./claude-prompt";
+import { createClaudeArgs, createClaudePrompt } from "./claude-prompt.js";
 import {
   type ClaudeJsonStreamState,
   consumeClaudeStdoutChunk,
   createClaudeJsonStreamState,
   flushClaudeStdoutBuffer,
-} from "./claude-stream";
-import { parseStructuredHandoff } from "./structured-handoff";
+} from "./claude-stream.js";
+import { parseStructuredHandoff } from "./structured-handoff.js";
 
 type ClaudeChildProcess = ReturnType<typeof spawn>;
 

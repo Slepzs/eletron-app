@@ -4,7 +4,7 @@ import type {
   CreateVerificationResultInput,
   VerificationCommand,
   VerificationCommandExecutionResult,
-} from "./types";
+} from "./types.js";
 
 const SUMMARY_PREVIEW_LENGTH = 160;
 

@@ -8,14 +8,14 @@ import {
   createSkippedVerificationCheckResult,
   createVerificationResult,
   normalizeVerificationCheckResult,
-} from "./normalization";
+} from "./normalization.js";
 import type {
   ExecuteVerificationCommandInput,
   RunVerificationInput,
   VerificationCommandExecutionResult,
   VerificationCommandExecutor,
   VerificationRunner,
-} from "./types";
+} from "./types.js";
 
 export interface CreateVerificationRunnerOptions {
   readonly executeCommand?: VerificationCommandExecutor;

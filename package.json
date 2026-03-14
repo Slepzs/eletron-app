@@ -13,5 +13,9 @@
     "@types/node": "latest",
     "turbo": "latest",
     "typescript": "latest"
-  }
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
 }

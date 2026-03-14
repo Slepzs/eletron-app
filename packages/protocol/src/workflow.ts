@@ -1,4 +1,4 @@
-import type { AgentKind, AgentRole, RunStage, RunStatus, Verdict } from "./domain";
+import type { AgentKind, AgentRole, RunStage, RunStatus, Verdict } from "./domain.js";
 
 export const RUN_STAGE_SEQUENCE = [
   "planning",

@@ -1,5 +1,5 @@
 import type { RuntimeSubscription } from "@iamrobot/orchestration";
-import { ipcMain, type WebContents } from "electron";
+import { BrowserWindow, dialog, ipcMain, type WebContents } from "electron";
 
 import {
   type DesktopRunEventPayload,
@@ -8,8 +8,8 @@ import {
   type DesktopSnapshotSubscriptionInput,
   type DesktopSubscriptionDisposeInput,
   desktopIpcChannels,
-} from "../shared/desktop-api";
-import type { DesktopRuntimeService } from "./runtime-service";
+} from "../shared/desktop-api.js";
+import type { DesktopRuntimeService } from "./runtime-service.js";
 
 interface RegisteredRendererSubscription {
   readonly senderId: number;
@@ -36,6 +36,11 @@ export function registerDesktopApiHandlers(service: DesktopRuntimeService): void
   ipcMain.handle(desktopIpcChannels.resolveApproval, (_, input) => service.resolveApproval(input));
   ipcMain.handle(desktopIpcChannels.retryRun, (_, input) => service.retryRun(input));
   ipcMain.handle(desktopIpcChannels.cancelRun, (_, runId) => service.cancelRun(runId));
+  ipcMain.handle(desktopIpcChannels.selectDirectory, async (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender) ?? BrowserWindow.getFocusedWindow();
+    const result = await dialog.showOpenDialog(win!, { properties: ["openDirectory"] });
+    return result.canceled ? null : (result.filePaths[0] ?? null);
+  });
   ipcMain.handle(
     desktopIpcChannels.subscribeToSnapshot,
     async (event, input: DesktopSnapshotSubscriptionInput) => {

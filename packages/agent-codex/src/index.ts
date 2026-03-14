@@ -14,8 +14,8 @@ import type {
 import type { AgentSession, AgentSessionStatus, Artifact } from "@iamrobot/protocol";
 import { createEntityId, createTimestamp } from "@iamrobot/protocol";
 
-import { CodexArtifactStore } from "./artifacts";
-import { buildCodexPrompt, parseStructuredHandoff } from "./handoff";
+import { CodexArtifactStore } from "./artifacts.js";
+import { buildCodexPrompt, parseStructuredHandoff } from "./handoff.js";
 
 type SpawnCodexProcess = (args: readonly string[], cwd: string) => ChildProcessWithoutNullStreams;
 

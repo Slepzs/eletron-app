@@ -26,7 +26,7 @@ import type {
   VerdictRow,
   VerificationResultInsert,
   VerificationResultRow,
-} from "./schema";
+} from "./schema.js";
 
 export function toTaskRow(task: Task): TaskInsert {
   return {

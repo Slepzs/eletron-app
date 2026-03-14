@@ -42,22 +42,41 @@ export function RunWorkspace({
 
   if (loading) {
     return (
-      <SectionCard eyebrow="Run Details" title="Loading">
-        <p style={{ color: "#94a3b8", margin: 0 }}>
-          Fetching the latest runtime view for this run.
-        </p>
-      </SectionCard>
+      <div style={{
+        alignItems: "center",
+        border: "1px dashed rgba(148, 163, 184, 0.12)",
+        borderRadius: "var(--radius-lg)",
+        color: "#64748b",
+        display: "flex",
+        justifyContent: "center",
+        minHeight: "200px",
+        padding: "2rem",
+      }}>
+        <p style={{ fontSize: "0.88rem", margin: 0 }}>Loading run details…</p>
+      </div>
     );
   }
 
   if (!details) {
     return (
-      <SectionCard eyebrow="Run Details" title="No Run Selected">
-        <p style={{ color: "#94a3b8", margin: 0 }}>
-          Pick a run from the history list or start a new task to inspect planner, implementer,
-          reviewer, and verification state.
+      <div style={{
+        alignItems: "center",
+        border: "1px dashed rgba(148, 163, 184, 0.18)",
+        borderRadius: "var(--radius-lg)",
+        color: "#64748b",
+        display: "flex",
+        flexDirection: "column",
+        gap: "0.5rem",
+        justifyContent: "center",
+        minHeight: "320px",
+        padding: "3rem",
+        textAlign: "center",
+      }}>
+        <p style={{ fontSize: "0.95rem", margin: 0 }}>No run selected</p>
+        <p style={{ color: "#475569", fontSize: "0.82rem", margin: 0, maxWidth: "36ch" }}>
+          Pick a run from the history or create a new task to begin.
         </p>
-      </SectionCard>
+      </div>
     );
   }
 
@@ -72,12 +91,12 @@ export function RunWorkspace({
       <RunOverviewCard details={details} />
       <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem" }}>
         {canCancel ? (
-          <button onClick={onCancelRun} style={runActionButtonStyle("#7c2d12")} type="button">
+          <button onClick={onCancelRun} style={runActionButtonStyle("cancel")} type="button">
             Cancel run
           </button>
         ) : null}
         {canRetry ? (
-          <button onClick={onRetryRun} style={runActionButtonStyle("#0f766e")} type="button">
+          <button onClick={onRetryRun} style={runActionButtonStyle("retry")} type="button">
             Retry run
           </button>
         ) : null}
@@ -99,7 +118,7 @@ export function RunWorkspace({
         style={{
           display: "grid",
           gap: "1rem",
-          gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
         }}
       >
         <VerdictCard verdict={details.latestVerdict} />
@@ -109,7 +128,7 @@ export function RunWorkspace({
         style={{
           display: "grid",
           gap: "1rem",
-          gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
         }}
       >
         <ApprovalQueueCard
@@ -126,15 +145,18 @@ export function RunWorkspace({
   );
 }
 
-function runActionButtonStyle(background: string): CSSProperties {
+function runActionButtonStyle(variant: "cancel" | "retry"): CSSProperties {
+  const isCancel = variant === "cancel";
   return {
-    background,
-    border: "none",
-    borderRadius: "999px",
-    color: "#f8fafc",
+    background: isCancel ? "rgba(239, 68, 68, 0.12)" : "rgba(20, 184, 166, 0.12)",
+    border: isCancel ? "1px solid rgba(239, 68, 68, 0.4)" : "1px solid rgba(20, 184, 166, 0.4)",
+    borderRadius: "var(--radius-md)",
+    color: isCancel ? "#fca5a5" : "#5eead4",
     cursor: "pointer",
     fontSize: "0.85rem",
-    fontWeight: 700,
-    padding: "0.7rem 1rem",
+    fontWeight: 600,
+    letterSpacing: "0.03em",
+    padding: "0.6rem 0.9rem",
+    transition: "background 150ms ease, border-color 150ms ease",
   };
 }

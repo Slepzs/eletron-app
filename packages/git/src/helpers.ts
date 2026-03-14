@@ -2,7 +2,7 @@ import { join, resolve } from "node:path";
 
 import type { AgentRole, RunId } from "@iamrobot/protocol";
 
-import type { CreateWorktreePlanInput, WorktreePlan } from "./contracts";
+import type { CreateWorktreePlanInput, WorktreePlan } from "./contracts.js";
 
 export function createRunBranchPrefix(runId: RunId): string {
   return `run/${runId}`;

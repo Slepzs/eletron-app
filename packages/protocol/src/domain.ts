@@ -5,7 +5,7 @@ import type {
   RunId,
   TaskId,
   VerificationResultId,
-} from "./ids";
+} from "./ids.js";
 
 export type AgentKind = "claude" | "codex";
 export type AgentRole = "implementer" | "planner" | "reviewer";

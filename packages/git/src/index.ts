@@ -1,3 +1,3 @@
-export * from "./client";
-export * from "./contracts";
-export * from "./helpers";
+export * from "./client.js";
+export * from "./contracts.js";
+export * from "./helpers.js";

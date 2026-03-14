@@ -9,7 +9,7 @@ import {
   resolveRunStatus,
 } from "@iamrobot/protocol";
 
-import type { CreateRunInput, CreateTaskInput } from "./contracts";
+import type { CreateRunInput, CreateTaskInput } from "./contracts.js";
 
 export function createTaskDefinition(input: CreateTaskInput): Task {
   return {

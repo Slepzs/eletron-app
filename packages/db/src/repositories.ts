@@ -32,7 +32,7 @@ import {
   toVerdictRow,
   toVerificationResult,
   toVerificationResultRow,
-} from "./mappers";
+} from "./mappers.js";
 import {
   agentSessions,
   approvalRequests,
@@ -43,7 +43,7 @@ import {
   tasks,
   verdicts,
   verificationResults,
-} from "./schema";
+} from "./schema.js";
 
 export type PersistenceDatabase = LibSQLDatabase<typeof persistenceSchema>;
 

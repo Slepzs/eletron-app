@@ -11,8 +11,8 @@ import type {
   PreparedWorktree,
   PrepareWorktreeInput,
   RemoveWorktreeInput,
-} from "./contracts";
-import { createWorktreePlan } from "./helpers";
+} from "./contracts.js";
+import { createWorktreePlan } from "./helpers.js";
 
 const execFileAsync = promisify(execFile);
 

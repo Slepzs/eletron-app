@@ -17,10 +17,21 @@
     "@tailwindcss/cli": "^4.2.1",
     "@types/react": "latest",
     "@types/react-dom": "latest",
+    "@vitejs/plugin-react": "^4.0.0",
+    "concurrently": "latest",
+    "esbuild": "latest",
     "shadcn": "^4.0.6",
-    "tailwindcss": "^4.2.1"
+    "tailwindcss": "^4.2.1",
+    "tsx": "latest",
+    "vite": "^6.0.0"
   },
   "scripts": {
+    "dev": "node build-preload.mjs && concurrently --kill-others-on-fail \"vite\" \"NODE_OPTIONS='--import tsx/esm' electron src/main/index.ts\"",
+    "dev:preload": "node build-preload.mjs --watch",
+    "dev:renderer": "vite",
+    "dev:electron": "NODE_OPTIONS='--import tsx/esm' electron src/main/index.ts",
+    "build:preload": "node build-preload.mjs",
+    "build": "pnpm run build:preload && vite build",
     "tailwind:build": "tailwindcss -i ./src/renderer/styles/tailwind.css -o ./src/renderer/styles/generated.css",
     "tailwind:watch": "tailwindcss -i ./src/renderer/styles/tailwind.css -o ./src/renderer/styles/generated.css --watch",
     "typecheck": "tsc --noEmit -p tsconfig.json",
