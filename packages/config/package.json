@@ -1,0 +1,20 @@
+{
+  "name": "@iamrobot/config",
+  "private": true,
+  "version": "0.0.0",
+  "files": [
+    "typescript"
+  ],
+  "exports": {
+    "./typescript/base": "./typescript/base.json",
+    "./typescript/node": "./typescript/node.json",
+    "./typescript/react": "./typescript/react.json",
+    "./typescript/electron": "./typescript/electron.json"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "format:check": "biome check --formatter-enabled=true --linter-enabled=false --assist-enabled=false ."
+  }
+}

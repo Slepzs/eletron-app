@@ -1,0 +1,38 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@iamrobot/agent-claude": [
+        "packages/agent-claude/src/index.ts"
+      ],
+      "@iamrobot/agent-codex": [
+        "packages/agent-codex/src/index.ts"
+      ],
+      "@iamrobot/agent-sdk": [
+        "packages/agent-sdk/src/index.ts"
+      ],
+      "@iamrobot/config/*": [
+        "packages/config/*"
+      ],
+      "@iamrobot/db": [
+        "packages/db/src/index.ts"
+      ],
+      "@iamrobot/git": [
+        "packages/git/src/index.ts"
+      ],
+      "@iamrobot/orchestration": [
+        "packages/orchestration/src/index.ts"
+      ],
+      "@iamrobot/protocol": [
+        "packages/protocol/src/index.ts"
+      ],
+      "@iamrobot/ui": [
+        "packages/ui/src/index.ts"
+      ],
+      "@iamrobot/verification": [
+        "packages/verification/src/index.ts"
+      ]
+    }
+  }
+}
+
