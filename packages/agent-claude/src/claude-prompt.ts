@@ -54,6 +54,7 @@ export function createClaudeArgs(
 ): readonly string[] {
   const args = [
     "--print",
+    "--verbose",
     "--output-format",
     "stream-json",
     "--permission-mode",

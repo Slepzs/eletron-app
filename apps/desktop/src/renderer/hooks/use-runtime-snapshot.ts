@@ -10,6 +10,8 @@ interface RuntimeSnapshotState {
 const emptySnapshot: RuntimeSnapshot = {
   runs: [],
   activeRunId: null,
+  projects: [],
+  selectedProjectId: null,
 };
 
 function resolveSelectedRunId(

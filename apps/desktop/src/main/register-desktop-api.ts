@@ -31,14 +31,26 @@ export function registerDesktopApiHandlers(service: DesktopRuntimeService): void
 
   ipcMain.handle(desktopIpcChannels.listRuns, () => service.listRuns());
   ipcMain.handle(desktopIpcChannels.getRunDetails, (_, runId) => service.getRunDetails(runId));
+  ipcMain.handle(desktopIpcChannels.createProject, (_, input) => service.createProject(input));
   ipcMain.handle(desktopIpcChannels.createTask, (_, input) => service.createTask(input));
   ipcMain.handle(desktopIpcChannels.startRun, (_, input) => service.startRun(input));
   ipcMain.handle(desktopIpcChannels.resolveApproval, (_, input) => service.resolveApproval(input));
   ipcMain.handle(desktopIpcChannels.retryRun, (_, input) => service.retryRun(input));
   ipcMain.handle(desktopIpcChannels.cancelRun, (_, runId) => service.cancelRun(runId));
+  ipcMain.handle(desktopIpcChannels.selectProject, (_, projectId) =>
+    service.selectProject(projectId),
+  );
+  ipcMain.handle(desktopIpcChannels.setHeartbeatMode, (_, enabled: boolean) =>
+    service.setHeartbeatMode(enabled),
+  );
+  ipcMain.handle(desktopIpcChannels.getHeartbeatMode, () => service.getHeartbeatMode());
   ipcMain.handle(desktopIpcChannels.selectDirectory, async (event) => {
     const win = BrowserWindow.fromWebContents(event.sender) ?? BrowserWindow.getFocusedWindow();
-    const result = await dialog.showOpenDialog(win!, { properties: ["openDirectory"] });
+
+    const result = win
+      ? await dialog.showOpenDialog(win, { properties: ["openDirectory"] })
+      : await dialog.showOpenDialog({ properties: ["openDirectory"] });
+
     return result.canceled ? null : (result.filePaths[0] ?? null);
   });
   ipcMain.handle(

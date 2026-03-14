@@ -18,7 +18,7 @@
   /* Interaction states */
   --color-panel-hover: #172033;
   --color-panel-active: #1e293b;
-  --color-panel-selected: rgba(56, 189, 248, 0.10);
+  --color-panel-selected: rgba(56, 189, 248, 0.1);
   --color-panel-selected-border: rgba(56, 189, 248, 0.55);
 
   /* Semantic text */
@@ -46,6 +46,14 @@
   --radius-md: 0.875rem;
   --radius-lg: 1.25rem;
   --radius-pill: 999px;
+}
+
+@keyframes ping {
+  75%,
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
 }
 
 @layer base {

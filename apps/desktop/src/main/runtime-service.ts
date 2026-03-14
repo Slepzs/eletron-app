@@ -1,4 +1,5 @@
 import type {
+  CreateProjectInput,
   CreateTaskInput,
   OrchestrationRuntime,
   ResolveApprovalInput,
@@ -10,6 +11,7 @@ import type {
 import type {
   ApprovalRequest,
   DomainEvent,
+  Project,
   Run,
   RunId,
   RuntimeRunDetails,
@@ -23,19 +25,24 @@ type RunSubscriber = (event: DomainEvent) => void;
 export interface DesktopRuntimeService {
   listRuns(): Promise<RuntimeSnapshot>;
   getRunDetails(runId: RunId): Promise<RuntimeRunDetails | null>;
+  createProject(input: CreateProjectInput): Promise<Project>;
   createTask(input: CreateTaskInput): Promise<Task>;
+  selectProject(projectId: Project["projectId"]): Promise<Project | null>;
   startRun(input: StartRunInput): Promise<StartRunResult>;
   resolveApproval(input: ResolveApprovalInput): Promise<ApprovalRequest | null>;
   retryRun(input: RetryRunInput): Promise<Run | null>;
   cancelRun(runId: RunId): Promise<Run | null>;
   subscribeToSnapshot(onSnapshot: SnapshotSubscriber): Promise<RuntimeSubscription>;
   subscribeToRun(runId: RunId, onEvent: RunSubscriber): Promise<RuntimeSubscription>;
+  setHeartbeatMode(enabled: boolean): Promise<void>;
+  getHeartbeatMode(): Promise<boolean>;
 }
 
 export class DefaultDesktopRuntimeService implements DesktopRuntimeService {
   private readonly snapshotSubscribers = new Set<SnapshotSubscriber>();
   private readonly runSubscribers = new Map<RunId, Set<RunSubscriber>>();
   private readonly watchedRuns = new Map<RunId, RuntimeSubscription>();
+  private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
 
   constructor(private readonly runtime: OrchestrationRuntime) {}
 
@@ -47,8 +54,24 @@ export class DefaultDesktopRuntimeService implements DesktopRuntimeService {
     return this.runtime.getRunDetails(runId);
   }
 
+  async createProject(input: CreateProjectInput): Promise<Project> {
+    const project = await this.runtime.createProject(input);
+
+    await this.publishSnapshot();
+
+    return project;
+  }
+
   createTask(input: CreateTaskInput): Promise<Task> {
     return this.runtime.createTask(input);
+  }
+
+  async selectProject(projectId: Project["projectId"]): Promise<Project | null> {
+    const project = await this.runtime.selectProject(projectId);
+
+    await this.publishSnapshot();
+
+    return project;
   }
 
   async startRun(input: StartRunInput): Promise<StartRunResult> {
@@ -85,6 +108,27 @@ export class DefaultDesktopRuntimeService implements DesktopRuntimeService {
     await this.publishSnapshot();
 
     return run;
+  }
+
+  async setHeartbeatMode(enabled: boolean): Promise<void> {
+    if (enabled) {
+      this.runtime.enableHeartbeat();
+      if (this.heartbeatInterval === null) {
+        this.heartbeatInterval = setInterval(() => {
+          void this.publishSnapshot();
+        }, 5000);
+      }
+    } else {
+      this.runtime.disableHeartbeat();
+      if (this.heartbeatInterval !== null) {
+        clearInterval(this.heartbeatInterval);
+        this.heartbeatInterval = null;
+      }
+    }
+  }
+
+  getHeartbeatMode(): Promise<boolean> {
+    return Promise.resolve(this.runtime.isHeartbeatEnabled());
   }
 
   async subscribeToSnapshot(onSnapshot: SnapshotSubscriber): Promise<RuntimeSubscription> {

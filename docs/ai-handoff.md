@@ -72,6 +72,17 @@ Preferred work order:
 - using unstructured prose as the only system contract
 - depending on a backend for MVP viability
 
+## Autonomous Operation
+
+If the user is away and you need to work without human input, follow the heartbeat loop defined in [autonomous-operation.md](autonomous-operation.md).
+
+That document covers:
+
+- how to restore context from git history
+- the loop for picking up and completing phases unattended
+- when to pause and wait for the user
+- quality gates before committing each phase
+
 ## Documentation Rule
 
 If implementation decisions change, update the spec docs in this folder first so the next AI instance inherits the same constraints and terminology.

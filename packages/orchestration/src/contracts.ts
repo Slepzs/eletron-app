@@ -7,6 +7,7 @@ import type {
   ApprovalKind,
   ApprovalRequest,
   DomainEvent,
+  Project,
   Run,
   RunId,
   RuntimeRunDetails,
@@ -26,7 +27,15 @@ export interface CreateTaskInput {
   readonly constraints?: readonly string[];
   readonly acceptanceCriteria?: readonly string[];
   readonly allowedPaths?: readonly string[];
-  readonly verificationProfile?: VerificationProfile;
+  readonly verificationProfile?: Task["verificationProfile"];
+}
+
+export interface CreateProjectInput {
+  readonly name: Project["name"];
+  readonly repoPath: Project["repoPath"];
+  readonly defaultBaseBranch: Project["defaultBaseBranch"];
+  readonly defaultAllowedPaths?: Project["defaultAllowedPaths"];
+  readonly verificationProfile?: Project["verificationProfile"];
 }
 
 export interface CreateRunInput {
@@ -108,7 +117,9 @@ export type RuntimeEventSubscriber = (event: DomainEvent) => void;
 export type RuntimeSubscription = () => void;
 
 export interface OrchestrationRuntime {
+  createProject(input: CreateProjectInput): Promise<Project>;
   createTask(input: CreateTaskInput): Promise<Task>;
+  selectProject(projectId: Project["projectId"]): Promise<Project | null>;
   startRun(input: StartRunInput): Promise<StartRunResult>;
   listRuns(): Promise<RuntimeSnapshot>;
   getRunDetails(runId: RunId): Promise<RuntimeRunDetails | null>;
@@ -116,4 +127,7 @@ export interface OrchestrationRuntime {
   resolveApproval(input: ResolveApprovalInput): Promise<ApprovalRequest | null>;
   retryRun(input: RetryRunInput): Promise<Run | null>;
   cancelRun(runId: RunId): Promise<Run | null>;
+  enableHeartbeat(): void;
+  disableHeartbeat(): void;
+  isHeartbeatEnabled(): boolean;
 }

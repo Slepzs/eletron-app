@@ -69,7 +69,14 @@ export function VerificationResultCard({ result }: VerificationResultCardProps) 
                     {check.status}
                   </span>
                 </div>
-                <p style={{ color: "#cbd5e1", fontSize: "0.9rem", lineHeight: 1.6, margin: "0.45rem 0 0" }}>
+                <p
+                  style={{
+                    color: "#cbd5e1",
+                    fontSize: "0.9rem",
+                    lineHeight: 1.6,
+                    margin: "0.45rem 0 0",
+                  }}
+                >
                   {check.summary}
                 </p>
                 <code

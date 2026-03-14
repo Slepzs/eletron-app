@@ -42,16 +42,18 @@ export function RunWorkspace({
 
   if (loading) {
     return (
-      <div style={{
-        alignItems: "center",
-        border: "1px dashed rgba(148, 163, 184, 0.12)",
-        borderRadius: "var(--radius-lg)",
-        color: "#64748b",
-        display: "flex",
-        justifyContent: "center",
-        minHeight: "200px",
-        padding: "2rem",
-      }}>
+      <div
+        style={{
+          alignItems: "center",
+          border: "1px dashed rgba(148, 163, 184, 0.12)",
+          borderRadius: "var(--radius-lg)",
+          color: "#64748b",
+          display: "flex",
+          justifyContent: "center",
+          minHeight: "200px",
+          padding: "2rem",
+        }}
+      >
         <p style={{ fontSize: "0.88rem", margin: 0 }}>Loading run details…</p>
       </div>
     );
@@ -59,19 +61,21 @@ export function RunWorkspace({
 
   if (!details) {
     return (
-      <div style={{
-        alignItems: "center",
-        border: "1px dashed rgba(148, 163, 184, 0.18)",
-        borderRadius: "var(--radius-lg)",
-        color: "#64748b",
-        display: "flex",
-        flexDirection: "column",
-        gap: "0.5rem",
-        justifyContent: "center",
-        minHeight: "320px",
-        padding: "3rem",
-        textAlign: "center",
-      }}>
+      <div
+        style={{
+          alignItems: "center",
+          border: "1px dashed rgba(148, 163, 184, 0.18)",
+          borderRadius: "var(--radius-lg)",
+          color: "#64748b",
+          display: "flex",
+          flexDirection: "column",
+          gap: "0.5rem",
+          justifyContent: "center",
+          minHeight: "320px",
+          padding: "3rem",
+          textAlign: "center",
+        }}
+      >
         <p style={{ fontSize: "0.95rem", margin: 0 }}>No run selected</p>
         <p style={{ color: "#475569", fontSize: "0.82rem", margin: 0, maxWidth: "36ch" }}>
           Pick a run from the history or create a new task to begin.
@@ -121,7 +125,7 @@ export function RunWorkspace({
           gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
         }}
       >
-        <VerdictCard verdict={details.latestVerdict} />
+        <VerdictCard verdict={details.latestVerdict} details={details} />
         <VerificationResultCard result={details.latestVerificationResult} />
       </div>
       <div

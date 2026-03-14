@@ -8,6 +8,8 @@ import type {
   ArtifactKind,
   DomainEvent,
   DomainEventType,
+  FailureContext,
+  Project,
   Run,
   RunStage,
   RunStatus,
@@ -18,6 +20,21 @@ import type {
   VerificationResultStatus,
 } from "@iamrobot/protocol";
 import { integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
+
+export const projects = sqliteTable("projects", {
+  id: text("id").$type<Project["projectId"]>().primaryKey(),
+  name: text("name").notNull(),
+  repoPath: text("repo_path").notNull(),
+  defaultBaseBranch: text("default_base_branch").notNull(),
+  defaultAllowedPaths: text("default_allowed_paths", {
+    mode: "json",
+  })
+    .$type<readonly string[]>()
+    .notNull(),
+  verificationProfile: text("verification_profile").notNull(),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+});
 
 export const tasks = sqliteTable("tasks", {
   id: text("id").$type<Task["taskId"]>().primaryKey(),
@@ -94,6 +111,7 @@ export const verdicts = sqliteTable("verdicts", {
   proposedNextAction: text("proposed_next_action"),
   confidence: real("confidence").notNull(),
   recordedAt: text("recorded_at").notNull(),
+  errorContext: text("error_context", { mode: "json" }).$type<FailureContext | null>(),
 });
 
 export const domainEvents = sqliteTable("domain_events", {
@@ -104,7 +122,13 @@ export const domainEvents = sqliteTable("domain_events", {
   payload: text("payload", { mode: "json" }).$type<DomainEvent>().notNull(),
 });
 
+export const appPreferences = sqliteTable("app_preferences", {
+  key: text("key").primaryKey(),
+  value: text("value"),
+});
+
 export const persistenceSchema = {
+  projects,
   tasks,
   runs,
   agentSessions,
@@ -113,7 +137,11 @@ export const persistenceSchema = {
   approvalRequests,
   verdicts,
   domainEvents,
+  appPreferences,
 };
+
+export type ProjectRow = typeof projects.$inferSelect;
+export type ProjectInsert = typeof projects.$inferInsert;
 
 export type TaskRow = typeof tasks.$inferSelect;
 export type TaskInsert = typeof tasks.$inferInsert;
@@ -138,3 +166,6 @@ export type VerdictInsert = typeof verdicts.$inferInsert;
 
 export type DomainEventRow = typeof domainEvents.$inferSelect;
 export type DomainEventInsert = typeof domainEvents.$inferInsert;
+
+export type AppPreferenceRow = typeof appPreferences.$inferSelect;
+export type AppPreferenceInsert = typeof appPreferences.$inferInsert;

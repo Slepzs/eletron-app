@@ -1,4 +1,5 @@
 import type {
+  Project,
   RunId,
   RuntimeRunDetails,
   RuntimeRunSummary,
@@ -43,9 +44,16 @@ export function createPersistenceStore(database: PersistenceDatabase): Persisten
         }),
       );
 
+      const [projectsList, storedSelectedProjectId] = await Promise.all([
+        repositories.projects.list(),
+        repositories.preferences.getSelectedProjectId(),
+      ]);
+
       return {
         runs: summaries,
         activeRunId: runs.find((run) => run.completedAt === undefined)?.runId ?? null,
+        projects: projectsList,
+        selectedProjectId: resolveSelectedProjectId(projectsList, storedSelectedProjectId),
       };
     },
     async getRunDetails(runId) {
@@ -85,6 +93,21 @@ export function createPersistenceStore(database: PersistenceDatabase): Persisten
       });
     },
   };
+}
+
+function resolveSelectedProjectId(
+  projects: readonly Project[],
+  selectedProjectId: Project["projectId"] | null,
+): Project["projectId"] | null {
+  if (selectedProjectId !== null) {
+    const project = projects.find((candidate) => candidate.projectId === selectedProjectId);
+
+    if (project !== undefined) {
+      return project.projectId;
+    }
+  }
+
+  return projects[0]?.projectId ?? null;
 }
 
 function requireEntity<T>(value: T | null, message: string): T {

@@ -25,6 +25,12 @@ import { parseStructuredHandoff } from "./structured-handoff.js";
 
 type ClaudeChildProcess = ReturnType<typeof spawn>;
 
+interface ClaudeExitError extends Error {
+  exitCode: number | null;
+  signal: string | null;
+  stderrSnippet: string | null;
+}
+
 interface ClaudeSessionState {
   activeProcess: ClaudeChildProcess | undefined;
   readonly artifacts: Artifact[];
@@ -420,7 +426,13 @@ export class ClaudeCodeAdapter implements AgentAdapter {
         }
 
         this.#updateSessionStatus(sessionState, "failed");
-        rejectRun(new Error(`Claude exited with code ${code ?? "unknown"}.`));
+        const exitErr = new Error(
+          `Claude exited with code ${code ?? "unknown"}.`,
+        ) as ClaudeExitError;
+        exitErr.exitCode = code ?? null;
+        exitErr.signal = signal ?? null;
+        exitErr.stderrSnippet = executionState.stderr.slice(-2000) || null;
+        rejectRun(exitErr);
       });
     });
   }

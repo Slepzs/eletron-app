@@ -3,6 +3,7 @@ import type {
   ApprovalRequest,
   Artifact,
   DomainEvent,
+  Project,
   Run,
   Task,
   Verdict,
@@ -12,12 +13,16 @@ import type {
 import type {
   AgentSessionInsert,
   AgentSessionRow,
+  AppPreferenceInsert,
+  AppPreferenceRow,
   ApprovalRequestInsert,
   ApprovalRequestRow,
   ArtifactInsert,
   ArtifactRow,
   DomainEventInsert,
   DomainEventRow,
+  ProjectInsert,
+  ProjectRow,
   RunInsert,
   RunRow,
   TaskInsert,
@@ -27,6 +32,32 @@ import type {
   VerificationResultInsert,
   VerificationResultRow,
 } from "./schema.js";
+
+export function toProjectRow(project: Project): ProjectInsert {
+  return {
+    id: project.projectId,
+    name: project.name,
+    repoPath: project.repoPath,
+    defaultBaseBranch: project.defaultBaseBranch,
+    defaultAllowedPaths: project.defaultAllowedPaths,
+    verificationProfile: project.verificationProfile,
+    createdAt: project.createdAt,
+    updatedAt: project.updatedAt,
+  };
+}
+
+export function toProject(row: ProjectRow): Project {
+  return {
+    projectId: row.id,
+    name: row.name,
+    repoPath: row.repoPath,
+    defaultBaseBranch: row.defaultBaseBranch,
+    defaultAllowedPaths: row.defaultAllowedPaths,
+    verificationProfile: row.verificationProfile,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
+}
 
 export function toTaskRow(task: Task): TaskInsert {
   return {
@@ -191,6 +222,7 @@ export function toVerdictRow(record: VerdictRecord): VerdictInsert {
     proposedNextAction: record.verdict.proposedNextAction,
     confidence: record.verdict.confidence,
     recordedAt: record.recordedAt,
+    errorContext: record.verdict.failureContext ?? null,
   };
 }
 
@@ -201,6 +233,7 @@ export function toVerdict(row: VerdictRow): Verdict {
     blockingIssues: row.blockingIssues,
     proposedNextAction: row.proposedNextAction,
     confidence: row.confidence,
+    ...(row.errorContext != null ? { failureContext: row.errorContext } : {}),
   };
 }
 
@@ -239,4 +272,23 @@ export function toDomainEventRow(event: DomainEvent): DomainEventInsert {
 
 export function toDomainEvent(row: DomainEventRow): DomainEvent {
   return row.payload;
+}
+
+export interface AppPreferenceRecord {
+  readonly key: string;
+  readonly value: string | null;
+}
+
+export function toAppPreferenceRow(record: AppPreferenceRecord): AppPreferenceInsert {
+  return {
+    key: record.key,
+    value: record.value,
+  };
+}
+
+export function toAppPreference(row: AppPreferenceRow): AppPreferenceRecord {
+  return {
+    key: row.key,
+    value: row.value,
+  };
 }

@@ -8,7 +8,11 @@ export interface EventTimelineCardProps {
 }
 
 function getEventDotColor(eventType: string): string {
-  if (eventType.includes("error") || eventType.includes("failed") || eventType.includes("failure")) {
+  if (
+    eventType.includes("error") ||
+    eventType.includes("failed") ||
+    eventType.includes("failure")
+  ) {
     return "#f87171";
   }
   return "#38bdf8";

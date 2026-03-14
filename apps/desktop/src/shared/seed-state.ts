@@ -27,7 +27,7 @@ export const seedTask = createTaskDefinition({
     "packages/protocol",
     "packages/verification",
   ],
-  verificationProfile,
+  verificationProfile: verificationProfile.name,
 });
 
 export const seedRun = createRunRecord({

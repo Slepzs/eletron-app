@@ -13,8 +13,11 @@ import type {
   AgentSession,
   ApprovalRequest,
   DomainEvent,
+  FailureContext,
+  Project,
   Run,
   RunId,
+  RunStage,
   RuntimeRunDetails,
   RuntimeSnapshot,
   StructuredHandoff,
@@ -31,6 +34,7 @@ import { createDefaultVerificationProfile, type VerificationProfile } from "@iam
 
 import type {
   CreateOrchestrationRuntimeOptions,
+  CreateProjectInput,
   CreateTaskInput,
   OrchestrationRuntime,
   ResolveApprovalInput,
@@ -44,6 +48,7 @@ import type {
 import {
   advanceRunStage,
   attachVerdict,
+  createProjectDefinition,
   createRunRecord,
   createTaskDefinition,
   getDefaultRoleAssignments,
@@ -56,6 +61,12 @@ import {
   createStageFailureVerdict,
   createVerificationFailureVerdict,
 } from "./verdicts.js";
+
+function stageToRole(stage: RunStage): AgentRole {
+  if (stage === "planning") return "planner";
+  if (stage === "reviewing") return "reviewer";
+  return "implementer";
+}
 
 interface ActiveRunState {
   readonly task: Task;
@@ -117,6 +128,7 @@ class DefaultOrchestrationRuntime implements OrchestrationRuntime {
   private readonly runSubscribers = new Map<RunId, Set<RuntimeEventSubscriber>>();
   private readonly verificationProfiles: Map<string, VerificationProfile>;
   private readonly activeRuns = new Map<RunId, ActiveRunState>();
+  private heartbeatEnabled = false;
 
   constructor(private readonly options: CreateOrchestrationRuntimeOptions) {
     this.adapters = createAdapterMap(options.adapters);
@@ -127,10 +139,34 @@ class DefaultOrchestrationRuntime implements OrchestrationRuntime {
     this.verificationProfiles = createVerificationProfileMap(options.verificationProfiles);
   }
 
+  async createProject(input: CreateProjectInput): Promise<Project> {
+    const existingProject = await this.options.store.projects.getByRepoPath(input.repoPath);
+
+    if (existingProject !== null) {
+      throw new Error(`A project already exists for ${input.repoPath}.`);
+    }
+
+    const project = createProjectDefinition(input);
+    await this.options.store.projects.save(project);
+    await this.options.store.preferences.setSelectedProjectId(project.projectId);
+    return project;
+  }
+
   async createTask(input: CreateTaskInput): Promise<Task> {
     const task = createTaskDefinition(input);
     await this.options.store.tasks.save(task);
     return task;
+  }
+
+  async selectProject(projectId: Project["projectId"]): Promise<Project | null> {
+    const project = await this.options.store.projects.getById(projectId);
+
+    if (project === null) {
+      return null;
+    }
+
+    await this.options.store.preferences.setSelectedProjectId(project.projectId);
+    return project;
   }
 
   async startRun(input: StartRunInput): Promise<StartRunResult> {
@@ -330,6 +366,18 @@ class DefaultOrchestrationRuntime implements OrchestrationRuntime {
     return nextRun;
   }
 
+  enableHeartbeat(): void {
+    this.heartbeatEnabled = true;
+  }
+
+  disableHeartbeat(): void {
+    this.heartbeatEnabled = false;
+  }
+
+  isHeartbeatEnabled(): boolean {
+    return this.heartbeatEnabled;
+  }
+
   private createActiveRunState(input: {
     readonly run: Run;
     readonly task: Task;
@@ -435,10 +483,26 @@ class DefaultOrchestrationRuntime implements OrchestrationRuntime {
       }
 
       const failure = error instanceof Error ? error : new Error(String(error));
+      const exitErr = failure as Partial<{
+        exitCode: number | null;
+        signal: string | null;
+        stderrSnippet: string | null;
+      }>;
+      const failureContext: FailureContext = {
+        exitCode: exitErr.exitCode ?? null,
+        signal: exitErr.signal ?? null,
+        errorMessage: failure.message,
+        stackTrace: failure.stack ?? null,
+        stderrSnippet: exitErr.stderrSnippet ?? null,
+        stage: state.run.stage,
+        role: stageToRole(state.run.stage),
+      };
       state.latestVerdict = createStageFailureVerdict({
         run: state.run,
         stage: state.run.stage,
+        role: stageToRole(state.run.stage),
         error: failure,
+        failureContext,
       });
       const retryStage = state.run.stage === "planning" ? "planning" : "implementing";
       state.run = await this.recordVerdictAndUpdateRun(
@@ -680,6 +744,10 @@ class DefaultOrchestrationRuntime implements OrchestrationRuntime {
     state: ActiveRunState,
     stage: RuntimePolicyContext["stage"],
   ): Promise<void> {
+    if (this.heartbeatEnabled) {
+      return;
+    }
+
     const hook = getPolicyHook(this.options.policyHooks, stage);
 
     if (!hook) {

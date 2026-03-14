@@ -192,6 +192,7 @@ The app should define a strict internal event and state model instead of treatin
 
 Core entities:
 
+- `Project`
 - `Run`
 - `Task`
 - `AgentSession`
@@ -223,6 +224,7 @@ Phase 0 should also expose preload-safe runtime read models such as:
 
 - `RuntimeSnapshot`
 - `RuntimeRunDetails`
+- saved project options and the selected project id
 - stable run and task identifiers for subscriptions and detail lookups
 
 ### Verification Engine
@@ -296,6 +298,8 @@ Every run should produce an audit log with:
 
 Use local `SQLite` through `Drizzle` for:
 
+- saved projects
+- selected project and local settings
 - tasks
 - run metadata
 - event logs

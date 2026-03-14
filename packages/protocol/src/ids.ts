@@ -2,6 +2,7 @@ export type EntityId<Brand extends string> = string & {
   readonly __brand: Brand;
 };
 
+export type ProjectId = EntityId<"project">;
 export type TaskId = EntityId<"task">;
 export type RunId = EntityId<"run">;
 export type AgentSessionId = EntityId<"agent-session">;

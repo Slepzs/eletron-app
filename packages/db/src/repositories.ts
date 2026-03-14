@@ -3,6 +3,7 @@ import type {
   ApprovalRequest,
   Artifact,
   DomainEvent,
+  Project,
   Run,
   Task,
   Verdict,
@@ -17,12 +18,16 @@ import {
   type StoredVerdictRecord,
   toAgentSession,
   toAgentSessionRow,
+  toAppPreference,
+  toAppPreferenceRow,
   toApprovalRequest,
   toApprovalRequestRow,
   toArtifact,
   toArtifactRow,
   toDomainEvent,
   toDomainEventRow,
+  toProject,
+  toProjectRow,
   toRun,
   toRunRow,
   toStoredVerdictRecord,
@@ -35,10 +40,12 @@ import {
 } from "./mappers.js";
 import {
   agentSessions,
+  appPreferences,
   approvalRequests,
   artifacts,
   domainEvents,
   persistenceSchema,
+  projects,
   runs,
   tasks,
   verdicts,
@@ -63,6 +70,20 @@ export function createPersistenceDatabase(
   return drizzle(client, {
     schema: persistenceSchema,
   });
+}
+
+export interface ProjectRepository {
+  save(project: Project): Promise<Project>;
+  getById(projectId: Project["projectId"]): Promise<Project | null>;
+  getByRepoPath(repoPath: Project["repoPath"]): Promise<Project | null>;
+  list(): Promise<readonly Project[]>;
+}
+
+export interface PreferencesRepository {
+  getSelectedProjectId(): Promise<Project["projectId"] | null>;
+  setSelectedProjectId(
+    projectId: Project["projectId"] | null,
+  ): Promise<Project["projectId"] | null>;
 }
 
 export interface TaskRepository {
@@ -116,6 +137,8 @@ export interface DomainEventRepository {
 }
 
 export interface PersistenceRepositories {
+  readonly projects: ProjectRepository;
+  readonly preferences: PreferencesRepository;
   readonly tasks: TaskRepository;
   readonly runs: RunRepository;
   readonly sessions: AgentSessionRepository;
@@ -130,6 +153,8 @@ export function createPersistenceRepositories(
   database: PersistenceDatabase,
 ): PersistenceRepositories {
   return {
+    projects: createProjectRepository(database),
+    preferences: createPreferencesRepository(database),
     tasks: createTaskRepository(database),
     runs: createRunRepository(database),
     sessions: createAgentSessionRepository(database),
@@ -138,6 +163,80 @@ export function createPersistenceRepositories(
     approvalRequests: createApprovalRequestRepository(database),
     verdicts: createVerdictRepository(database),
     events: createDomainEventRepository(database),
+  };
+}
+
+const SELECTED_PROJECT_KEY = "selectedProjectId";
+
+function createProjectRepository(database: PersistenceDatabase): ProjectRepository {
+  return {
+    async save(project) {
+      const row = toProjectRow(project);
+      await database
+        .insert(projects)
+        .values(row)
+        .onConflictDoUpdate({
+          target: projects.id,
+          set: {
+            name: row.name,
+            repoPath: row.repoPath,
+            defaultBaseBranch: row.defaultBaseBranch,
+            defaultAllowedPaths: row.defaultAllowedPaths,
+            verificationProfile: row.verificationProfile,
+            updatedAt: row.updatedAt,
+          },
+        });
+      return project;
+    },
+    async getById(projectId) {
+      const [row] = await database
+        .select()
+        .from(projects)
+        .where(eq(projects.id, projectId))
+        .limit(1);
+      return row ? toProject(row) : null;
+    },
+    async getByRepoPath(repoPath) {
+      const [row] = await database
+        .select()
+        .from(projects)
+        .where(eq(projects.repoPath, repoPath))
+        .limit(1);
+      return row ? toProject(row) : null;
+    },
+    async list() {
+      const rows = await database
+        .select()
+        .from(projects)
+        .orderBy(desc(projects.updatedAt), asc(projects.name), asc(projects.id));
+      return rows.map(toProject);
+    },
+  };
+}
+
+function createPreferencesRepository(database: PersistenceDatabase): PreferencesRepository {
+  return {
+    async getSelectedProjectId() {
+      const [row] = await database
+        .select()
+        .from(appPreferences)
+        .where(eq(appPreferences.key, SELECTED_PROJECT_KEY))
+        .limit(1);
+      return row ? (toAppPreference(row).value as Project["projectId"] | null) : null;
+    },
+    async setSelectedProjectId(projectId) {
+      if (projectId === null) {
+        await database.delete(appPreferences).where(eq(appPreferences.key, SELECTED_PROJECT_KEY));
+        return null;
+      }
+
+      const row = toAppPreferenceRow({ key: SELECTED_PROJECT_KEY, value: projectId });
+      await database
+        .insert(appPreferences)
+        .values(row)
+        .onConflictDoUpdate({ target: appPreferences.key, set: { value: row.value } });
+      return projectId;
+    },
   };
 }
 

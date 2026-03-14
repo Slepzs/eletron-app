@@ -2,6 +2,7 @@ import type {
   AgentSession,
   ApprovalRequest,
   Artifact,
+  Project,
   Run,
   Task,
   Verdict,
@@ -26,4 +27,6 @@ export interface RuntimeRunDetails extends RuntimeRunSummary {
 export interface RuntimeSnapshot {
   readonly runs: readonly RuntimeRunSummary[];
   readonly activeRunId: Run["runId"] | null;
+  readonly projects: readonly Project[];
+  readonly selectedProjectId: Project["projectId"] | null;
 }

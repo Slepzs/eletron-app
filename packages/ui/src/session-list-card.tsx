@@ -25,9 +25,7 @@ export function SessionListCard({ sessions }: SessionListCardProps) {
               key={session.sessionId}
               style={{
                 borderBottom:
-                  index === sessions.length - 1
-                    ? undefined
-                    : "1px solid rgba(148, 163, 184, 0.08)",
+                  index === sessions.length - 1 ? undefined : "1px solid rgba(148, 163, 184, 0.08)",
                 padding: "0.75rem 0",
               }}
             >

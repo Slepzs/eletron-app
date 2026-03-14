@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import type { Run, Task, Verdict } from "@iamrobot/protocol";
+import type { Project, Run, Task, Verdict } from "@iamrobot/protocol";
 import {
   canTransitionRunStage,
   createEntityId,
@@ -9,7 +9,22 @@ import {
   resolveRunStatus,
 } from "@iamrobot/protocol";
 
-import type { CreateRunInput, CreateTaskInput } from "./contracts.js";
+import type { CreateProjectInput, CreateRunInput, CreateTaskInput } from "./contracts.js";
+
+export function createProjectDefinition(input: CreateProjectInput): Project {
+  const timestamp = createTimestamp();
+
+  return {
+    projectId: createEntityId("project", randomUUID()),
+    name: input.name,
+    repoPath: input.repoPath,
+    defaultBaseBranch: input.defaultBaseBranch,
+    defaultAllowedPaths: input.defaultAllowedPaths ?? [],
+    verificationProfile: input.verificationProfile ?? "default",
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  };
+}
 
 export function createTaskDefinition(input: CreateTaskInput): Task {
   return {
@@ -20,7 +35,7 @@ export function createTaskDefinition(input: CreateTaskInput): Task {
     constraints: input.constraints ?? [],
     acceptanceCriteria: input.acceptanceCriteria ?? [],
     allowedPaths: input.allowedPaths ?? [],
-    verificationProfile: input.verificationProfile?.name ?? "default",
+    verificationProfile: input.verificationProfile ?? "default",
   };
 }
 

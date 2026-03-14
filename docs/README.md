@@ -39,6 +39,7 @@ flowchart LR
 3. [Multi-agent delivery plan](multi-agent-delivery-plan.md)
 4. [Spec-driven development](process/spec-driven-development.md)
 5. [AI handoff guide](ai-handoff.md)
+6. [Autonomous operation guide](autonomous-operation.md)
 
 ## Documentation Areas
 
@@ -48,3 +49,4 @@ flowchart LR
 - [Multi-agent delivery plan](multi-agent-delivery-plan.md)
 - [Process](process/spec-driven-development.md)
 - [AI handoff](ai-handoff.md)
+- [Autonomous operation](autonomous-operation.md)

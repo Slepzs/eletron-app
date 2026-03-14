@@ -2,6 +2,7 @@ import type {
   AgentSessionId,
   ApprovalRequestId,
   ArtifactId,
+  ProjectId,
   RunId,
   TaskId,
   VerificationResultId,
@@ -32,6 +33,17 @@ export type VerdictStatus = "accepted" | "needs_retry" | "rejected";
 
 export type ApprovalKind = "command" | "file" | "network" | "policy";
 export type ApprovalDecision = "approved" | "pending" | "rejected";
+
+export interface Project {
+  readonly projectId: ProjectId;
+  readonly name: string;
+  readonly repoPath: string;
+  readonly defaultBaseBranch: string;
+  readonly defaultAllowedPaths: readonly string[];
+  readonly verificationProfile: string;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
 
 export interface Task {
   readonly taskId: TaskId;
@@ -91,12 +103,23 @@ export interface VerificationResult {
   readonly completedAt: string;
 }
 
+export interface FailureContext {
+  readonly exitCode: number | null;
+  readonly signal: string | null;
+  readonly errorMessage: string;
+  readonly stackTrace: string | null;
+  readonly stderrSnippet: string | null;
+  readonly stage: RunStage;
+  readonly role: AgentRole;
+}
+
 export interface Verdict {
   readonly status: VerdictStatus;
   readonly summary: string;
   readonly blockingIssues: readonly string[];
   readonly proposedNextAction: string | null;
   readonly confidence: number;
+  readonly failureContext?: FailureContext;
 }
 
 export interface ApprovalRequest {

@@ -1,4 +1,11 @@
-import type { Run, StructuredHandoff, Verdict, VerificationResult } from "@iamrobot/protocol";
+import type {
+  AgentRole,
+  FailureContext,
+  Run,
+  StructuredHandoff,
+  Verdict,
+  VerificationResult,
+} from "@iamrobot/protocol";
 import { getStructuredHandoffSection } from "@iamrobot/protocol";
 import { formatVerificationSummary, getFailedVerificationChecks } from "@iamrobot/verification";
 
@@ -7,6 +14,7 @@ interface CreateRetryVerdictInput {
   readonly blockingIssues: readonly string[];
   readonly proposedNextAction: string | null;
   readonly attemptsRemaining: boolean;
+  readonly failureContext?: FailureContext;
 }
 
 export function createAcceptedVerdict(result: VerificationResult): Verdict {
@@ -54,7 +62,9 @@ export function createVerificationFailureVerdict(result: VerificationResult, run
 export function createStageFailureVerdict(input: {
   readonly run: Run;
   readonly stage: Run["stage"];
+  readonly role: AgentRole;
   readonly error: Error;
+  readonly failureContext?: FailureContext;
 }): Verdict {
   const stageLabel =
     input.stage === "planning"
@@ -70,6 +80,7 @@ export function createStageFailureVerdict(input: {
     blockingIssues: [input.error.message],
     proposedNextAction: `Retry ${input.stage} after addressing the failure.`,
     attemptsRemaining: input.run.currentAttempt < input.run.maxAttempts,
+    ...(input.failureContext !== undefined ? { failureContext: input.failureContext } : {}),
   });
 }
 
@@ -84,22 +95,26 @@ export function createCancelledVerdict(): Verdict {
 }
 
 function createRetryVerdict(input: CreateRetryVerdictInput): Verdict {
+  const base = {
+    blockingIssues: input.blockingIssues,
+    proposedNextAction: input.proposedNextAction,
+    ...(input.failureContext !== undefined ? { failureContext: input.failureContext } : {}),
+  };
+
   if (input.attemptsRemaining) {
     return {
       status: "needs_retry",
       summary: input.summary,
-      blockingIssues: input.blockingIssues,
-      proposedNextAction: input.proposedNextAction,
       confidence: 0.58,
+      ...base,
     };
   }
 
   return {
     status: "rejected",
     summary: `${input.summary} Maximum attempts reached.`,
-    blockingIssues: input.blockingIssues,
-    proposedNextAction: input.proposedNextAction,
     confidence: 0.73,
+    ...base,
   };
 }
 

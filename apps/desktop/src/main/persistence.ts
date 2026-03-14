@@ -12,6 +12,20 @@ import {
 const PERSISTENCE_DATABASE_FILENAME = "iamrobot.sqlite";
 
 const PERSISTENCE_SCHEMA_STATEMENTS = [
+  `CREATE TABLE IF NOT EXISTS projects (
+    id TEXT PRIMARY KEY NOT NULL,
+    name TEXT NOT NULL,
+    repo_path TEXT NOT NULL,
+    default_base_branch TEXT NOT NULL,
+    default_allowed_paths TEXT NOT NULL,
+    verification_profile TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  )`,
+  `CREATE TABLE IF NOT EXISTS app_preferences (
+    key TEXT PRIMARY KEY NOT NULL,
+    value TEXT
+  )`,
   `CREATE TABLE IF NOT EXISTS tasks (
     id TEXT PRIMARY KEY NOT NULL,
     repo_path TEXT NOT NULL,
@@ -87,6 +101,13 @@ const PERSISTENCE_SCHEMA_STATEMENTS = [
   )`,
 ] as const;
 
+// Additive column migrations — run after schema creation.
+// SQLite throws if a column already exists; the try/catch in
+// ensurePersistenceSchema swallows that so subsequent launches are safe.
+const PERSISTENCE_MIGRATION_STATEMENTS = [
+  `ALTER TABLE verdicts ADD COLUMN error_context TEXT`,
+] as const;
+
 export async function createDesktopPersistenceStore(
   userDataPath: string,
 ): Promise<PersistenceStore> {
@@ -106,5 +127,12 @@ export async function createDesktopPersistenceStore(
 async function ensurePersistenceSchema(database: PersistenceDatabase): Promise<void> {
   for (const statement of PERSISTENCE_SCHEMA_STATEMENTS) {
     await database.run(statement);
+  }
+  for (const statement of PERSISTENCE_MIGRATION_STATEMENTS) {
+    try {
+      await database.run(statement);
+    } catch {
+      // Column already exists on subsequent app launches — safe to ignore.
+    }
   }
 }
