@@ -286,6 +286,10 @@ Expected outputs:
 - event emission
 - final verdict assembly
 
+Implementation note:
+
+- until cross-worktree patch or commit handoff exists, the reviewer should inspect the implementer worktree so uncommitted changes remain visible during review and verification
+
 Non-goals:
 
 - renderer UI polish
