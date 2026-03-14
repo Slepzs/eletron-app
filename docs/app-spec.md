@@ -9,6 +9,7 @@ It is intended to be good enough for handoff to other AI instances, not a finish
 Related docs:
 
 - [Architecture overview](architecture.md)
+- [Renderer UI stack](renderer-ui-stack.md)
 - [Spec-driven development](process/spec-driven-development.md)
 - [AI handoff guide](ai-handoff.md)
 
@@ -85,6 +86,21 @@ Future web work is allowed only after explicit user approval.
 - `Drizzle ORM`
 - `SQLite`
 
+### Renderer UI Baseline
+
+The adopted renderer UI baseline is:
+
+- `Tailwind CSS` in `apps/desktop` for layout, spacing, and dark theme tokens
+- `shadcn` as the component authoring workflow, with shared wrappers living in `packages/ui`
+- `Radix UI` primitives in `packages/ui` for dialogs, menus, tabs, tooltips, and scroll areas
+- `class-variance-authority`, `clsx`, and `tailwind-merge` in `packages/ui` for typed variants and class composition
+- `lucide-react` for iconography
+- `react-resizable-panels` for the three-pane desktop shell layout
+- `react-virtuoso` for long lists such as logs, file trees, and run history
+- `xterm.js` packages for real terminal surfaces when CLI sessions are rendered in the UI
+
+See [Renderer UI stack](renderer-ui-stack.md) for package ownership and deferred packages.
+
 ### Deferred Stack
 
 These are intentionally deferred and must not be implemented yet:
@@ -92,6 +108,8 @@ These are intentionally deferred and must not be implemented yet:
 - `Next.js`
 - `Neon Postgres`
 - any required cloud backend
+- `monaco-editor` until an editor-grade diff or log viewer is required
+- `dnd-kit` until the UI actually needs draggable tabs, cards, or workspace ordering
 
 ## System Areas
 
