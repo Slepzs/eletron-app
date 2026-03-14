@@ -1,5 +1,6 @@
 - [Home](/)
 - [App Spec](app-spec.md)
 - [Architecture](architecture.md)
+- [Multi-Agent Delivery Plan](multi-agent-delivery-plan.md)
 - [Spec-Driven Development](process/spec-driven-development.md)
 - [AI Handoff](ai-handoff.md)

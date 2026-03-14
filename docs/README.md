@@ -36,12 +36,14 @@ flowchart LR
 
 1. [App spec](app-spec.md)
 2. [Architecture overview](architecture.md)
-3. [Spec-driven development](process/spec-driven-development.md)
-4. [AI handoff guide](ai-handoff.md)
+3. [Multi-agent delivery plan](multi-agent-delivery-plan.md)
+4. [Spec-driven development](process/spec-driven-development.md)
+5. [AI handoff guide](ai-handoff.md)
 
 ## Documentation Areas
 
 - [Spec](app-spec.md)
 - [Architecture](architecture.md)
+- [Multi-agent delivery plan](multi-agent-delivery-plan.md)
 - [Process](process/spec-driven-development.md)
 - [AI handoff](ai-handoff.md)

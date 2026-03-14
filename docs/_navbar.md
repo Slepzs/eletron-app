@@ -1,4 +1,5 @@
 * [Docs Home](/)
 * [Spec](app-spec.md)
 * [Architecture](architecture.md)
+* [Multi-Agent Plan](multi-agent-delivery-plan.md)
 * [Process](process/spec-driven-development.md)
