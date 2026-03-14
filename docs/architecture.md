@@ -31,6 +31,16 @@ The renderer should handle:
 
 The renderer should not spawn or manage subprocesses directly.
 
+The renderer styling and component baseline is:
+
+- `Tailwind CSS` in `apps/desktop` for shell layout and theme tokens
+- shared `packages/ui` components layered on top of `Radix UI` primitives
+- `react-resizable-panels` for primary layout splits
+- `react-virtuoso` for long, virtualized lists
+- `xterm.js` for real terminal panes when agent sessions are surfaced in the renderer
+
+`monaco-editor` and `dnd-kit` stay deferred until there is a concrete product requirement for them.
+
 ### Main Process And Runtime
 
 The main process and runtime should handle:

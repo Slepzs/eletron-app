@@ -44,6 +44,7 @@ flowchart LR
 
 - [Spec](app-spec.md)
 - [Architecture](architecture.md)
+- [Renderer UI stack](renderer-ui-stack.md)
 - [Multi-agent delivery plan](multi-agent-delivery-plan.md)
 - [Process](process/spec-driven-development.md)
 - [AI handoff](ai-handoff.md)

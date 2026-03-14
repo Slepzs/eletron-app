@@ -14,10 +14,15 @@
     "react-dom": "latest"
   },
   "devDependencies": {
+    "@tailwindcss/cli": "^4.2.1",
     "@types/react": "latest",
-    "@types/react-dom": "latest"
+    "@types/react-dom": "latest",
+    "shadcn": "^4.0.6",
+    "tailwindcss": "^4.2.1"
   },
   "scripts": {
+    "tailwind:build": "tailwindcss -i ./src/renderer/styles/tailwind.css -o ./src/renderer/styles/generated.css",
+    "tailwind:watch": "tailwindcss -i ./src/renderer/styles/tailwind.css -o ./src/renderer/styles/generated.css --watch",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "biome check .",
     "format": "biome format --write .",
