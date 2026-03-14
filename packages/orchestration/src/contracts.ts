@@ -1,15 +1,23 @@
+import type { AgentAdapter } from "@iamrobot/agent-sdk";
+import type { PersistenceStore } from "@iamrobot/db";
+import type { PreparedWorktree, PrepareWorktreeInput } from "@iamrobot/git";
 import type {
   AgentRoleAssignments,
   ApprovalDecision,
+  ApprovalKind,
   ApprovalRequest,
   DomainEvent,
   Run,
   RunId,
   RuntimeRunDetails,
   RuntimeSnapshot,
+  StructuredHandoff,
+  StructuredHandoffSpec,
   Task,
+  Verdict,
+  VerificationResult,
 } from "@iamrobot/protocol";
-import type { VerificationProfile } from "@iamrobot/verification";
+import type { VerificationProfile, VerificationRunner } from "@iamrobot/verification";
 
 export interface CreateTaskInput {
   readonly repoPath: string;
@@ -43,6 +51,57 @@ export interface ResolveApprovalInput {
 export interface StartRunResult {
   readonly task: Task;
   readonly run: Run;
+}
+
+export interface RuntimeWorktreeClient {
+  prepare(input: PrepareWorktreeInput): Promise<PreparedWorktree>;
+}
+
+export interface RuntimeApprovalDraft {
+  readonly kind: ApprovalKind;
+  readonly title: string;
+  readonly description: string;
+}
+
+export interface RuntimePolicyContext {
+  readonly run: Run;
+  readonly task: Task;
+  readonly stage: Run["stage"];
+}
+
+export type RuntimePolicyHook =
+  | ((
+      context: RuntimePolicyContext,
+    ) => RuntimeApprovalDraft | null | Promise<RuntimeApprovalDraft | null>)
+  | undefined;
+
+export interface RuntimePolicyHooks {
+  readonly beforePlanning?: RuntimePolicyHook;
+  readonly beforeImplementing?: RuntimePolicyHook;
+  readonly beforeReviewing?: RuntimePolicyHook;
+  readonly beforeVerifying?: RuntimePolicyHook;
+}
+
+export interface RuntimeContextSnapshot {
+  readonly task: Task;
+  readonly run: Run;
+  readonly planningHandoff?: StructuredHandoff;
+  readonly implementationHandoff?: StructuredHandoff;
+  readonly reviewHandoff?: StructuredHandoff;
+  readonly verificationResult?: VerificationResult;
+  readonly latestVerdict?: Verdict;
+}
+
+export interface CreateOrchestrationRuntimeOptions {
+  readonly adapters: readonly AgentAdapter[];
+  readonly store: PersistenceStore;
+  readonly verificationRunner: VerificationRunner;
+  readonly verificationProfiles?: readonly VerificationProfile[];
+  readonly worktrees: RuntimeWorktreeClient;
+  readonly handoffSpec?: StructuredHandoffSpec;
+  readonly createApprovalRequestId?: () => ApprovalRequest["approvalRequestId"];
+  readonly createTimestamp?: () => string;
+  readonly policyHooks?: RuntimePolicyHooks;
 }
 
 export type RuntimeEventSubscriber = (event: DomainEvent) => void;

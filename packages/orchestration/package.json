@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@iamrobot/agent-sdk": "workspace:*",
+    "@iamrobot/db": "workspace:*",
+    "@iamrobot/git": "workspace:*",
     "@iamrobot/protocol": "workspace:*",
     "@iamrobot/verification": "workspace:*"
   },
