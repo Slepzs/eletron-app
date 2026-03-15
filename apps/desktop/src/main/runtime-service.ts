@@ -12,8 +12,8 @@ import {
   type AgentOutputChunk,
   type ApprovalRequest,
   MAX_LIVE_OUTPUT_CHUNKS,
-  REPLAY_CHECKPOINT_INTERVAL,
   type Project,
+  REPLAY_CHECKPOINT_INTERVAL,
   type Run,
   type RunId,
   type RuntimeRunDetails,
@@ -212,6 +212,16 @@ export class DefaultDesktopRuntimeService implements DesktopRuntimeService {
 
       if (shouldPersistRunOutputReplay(event)) {
         void this.persistRunOutputReplay(runId);
+      } else if (isAgentOutputChunk(event)) {
+        const currentChunkCount = (this.runEventHistory.get(runId) ?? []).filter(
+          isAgentOutputChunk,
+        ).length;
+        const lastCursor = this.replayCheckpointCursor.get(runId) ?? 0;
+
+        if (currentChunkCount - lastCursor >= REPLAY_CHECKPOINT_INTERVAL) {
+          this.replayCheckpointCursor.set(runId, currentChunkCount);
+          void this.persistRunOutputReplay(runId);
+        }
       }
 
       if (isTerminalRunEvent(event)) {
@@ -264,6 +274,7 @@ export class DefaultDesktopRuntimeService implements DesktopRuntimeService {
 
     unsubscribe();
     this.watchedRuns.delete(runId);
+    this.replayCheckpointCursor.delete(runId);
   }
 
   private async persistRunOutputReplay(runId: RunId): Promise<void> {
@@ -271,6 +282,7 @@ export class DefaultDesktopRuntimeService implements DesktopRuntimeService {
     const didPersist = await this.runOutputReplayStore.save(runId, outputChunks);
 
     if (didPersist) {
+      this.replayCheckpointCursor.set(runId, outputChunks.length);
       await this.publishSnapshot();
     }
   }

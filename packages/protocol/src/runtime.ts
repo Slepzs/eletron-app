@@ -12,6 +12,7 @@ import type {
 import type { DomainEvent } from "./events.js";
 
 export const MAX_LIVE_OUTPUT_CHUNKS = 600;
+export const REPLAY_CHECKPOINT_INTERVAL = 50;
 
 export interface RuntimeRunSummary {
   readonly task: Task;
