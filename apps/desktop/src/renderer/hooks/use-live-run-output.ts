@@ -1,12 +1,10 @@
-import type { AgentOutputChunk, RunId } from "@iamrobot/protocol";
+import { type AgentOutputChunk, MAX_LIVE_OUTPUT_CHUNKS, type RunId } from "@iamrobot/protocol";
 import { startTransition, useEffect, useState } from "react";
 
 interface LiveRunOutputState {
   readonly entries: readonly AgentOutputChunk[];
   readonly error: string | null;
 }
-
-const MAX_OUTPUT_ENTRIES = 600;
 
 function isOutputChunk(event: { readonly type: string }): event is AgentOutputChunk {
   return event.type === "stdout" || event.type === "stderr";
@@ -74,9 +72,9 @@ export function useLiveRunOutput(selectedRunId: RunId | null) {
 }
 
 function trimOutputEntries(entries: readonly AgentOutputChunk[]): readonly AgentOutputChunk[] {
-  if (entries.length <= MAX_OUTPUT_ENTRIES) {
+  if (entries.length <= MAX_LIVE_OUTPUT_CHUNKS) {
     return entries;
   }
 
-  return entries.slice(entries.length - MAX_OUTPUT_ENTRIES);
+  return entries.slice(entries.length - MAX_LIVE_OUTPUT_CHUNKS);
 }

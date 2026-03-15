@@ -31,6 +31,7 @@ import {
   createDefaultStructuredHandoffSpec,
   createEntityId,
   createTimestamp,
+  MAX_LIVE_OUTPUT_CHUNKS,
 } from "@iamrobot/protocol";
 import { createDefaultVerificationProfile, type VerificationProfile } from "@iamrobot/verification";
 
@@ -742,6 +743,7 @@ class DefaultOrchestrationRuntime implements OrchestrationRuntime {
   }> {
     if (isAgentOutputChunk(event)) {
       state.outputChunks.push(event);
+      trimLiveOutputChunks(state.outputChunks);
       this.publishRunEvent(event);
       return {};
     }
@@ -1118,6 +1120,14 @@ function isAgentSessionStatusEvent(
 
 function isAgentOutputChunk(event: AgentStreamEvent | RuntimeRunEvent): event is AgentOutputChunk {
   return event.type === "stdout" || event.type === "stderr";
+}
+
+function trimLiveOutputChunks(outputChunks: AgentOutputChunk[]): void {
+  const excessOutputCount = outputChunks.length - MAX_LIVE_OUTPUT_CHUNKS;
+
+  if (excessOutputCount > 0) {
+    outputChunks.splice(0, excessOutputCount);
+  }
 }
 
 function isAgentHandoffEvent(

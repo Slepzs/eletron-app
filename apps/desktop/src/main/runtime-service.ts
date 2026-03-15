@@ -8,15 +8,17 @@ import type {
   StartRunInput,
   StartRunResult,
 } from "@iamrobot/orchestration";
-import type {
-  ApprovalRequest,
-  Project,
-  Run,
-  RunId,
-  RuntimeRunDetails,
-  RuntimeRunEvent,
-  RuntimeSnapshot,
-  Task,
+import {
+  type AgentOutputChunk,
+  type ApprovalRequest,
+  MAX_LIVE_OUTPUT_CHUNKS,
+  type Project,
+  type Run,
+  type RunId,
+  type RuntimeRunDetails,
+  type RuntimeRunEvent,
+  type RuntimeSnapshot,
+  type Task,
 } from "@iamrobot/protocol";
 
 type SnapshotSubscriber = (snapshot: RuntimeSnapshot) => void;
@@ -198,14 +200,17 @@ export class DefaultDesktopRuntimeService implements DesktopRuntimeService {
       if (isDomainEvent(event)) {
         void this.publishSnapshot();
       }
+
+      if (isTerminalRunEvent(event)) {
+        this.stopWatchingRun(runId);
+      }
     });
 
     this.watchedRuns.set(runId, unsubscribe);
   }
 
   private publishRunEvent(runId: RunId, event: RuntimeRunEvent): void {
-    const history = this.runEventHistory.get(runId) ?? [];
-    history.push(event);
+    const history = appendRunEventHistory(this.runEventHistory.get(runId), event);
     this.runEventHistory.set(runId, history);
 
     const subscribers = this.runSubscribers.get(runId);
@@ -230,8 +235,43 @@ export class DefaultDesktopRuntimeService implements DesktopRuntimeService {
       subscriber(snapshot);
     }
   }
+
+  private stopWatchingRun(runId: RunId): void {
+    const unsubscribe = this.watchedRuns.get(runId);
+
+    if (!unsubscribe) {
+      return;
+    }
+
+    unsubscribe();
+    this.watchedRuns.delete(runId);
+  }
 }
 
 function isDomainEvent(event: RuntimeRunEvent): boolean {
   return event.type !== "stdout" && event.type !== "stderr";
+}
+
+function appendRunEventHistory(
+  existingHistory: readonly RuntimeRunEvent[] | undefined,
+  event: RuntimeRunEvent,
+): RuntimeRunEvent[] {
+  const history = existingHistory ? [...existingHistory, event] : [event];
+  const domainEvents = history.filter(isDomainEvent);
+  const outputChunks = history.filter(isAgentOutputChunk);
+
+  return [...domainEvents, ...outputChunks.slice(-MAX_LIVE_OUTPUT_CHUNKS)].sort((left, right) =>
+    left.timestamp.localeCompare(right.timestamp),
+  );
+}
+
+function isAgentOutputChunk(event: RuntimeRunEvent): event is AgentOutputChunk {
+  return event.type === "stdout" || event.type === "stderr";
+}
+
+function isTerminalRunEvent(event: RuntimeRunEvent): boolean {
+  return (
+    event.type === "run.status.changed" &&
+    (event.nextStatus === "failed" || event.nextStatus === "succeeded")
+  );
 }

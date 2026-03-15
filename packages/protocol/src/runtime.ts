@@ -11,6 +11,8 @@ import type {
 } from "./domain.js";
 import type { DomainEvent } from "./events.js";
 
+export const MAX_LIVE_OUTPUT_CHUNKS = 600;
+
 export interface RuntimeRunSummary {
   readonly task: Task;
   readonly run: Run;
