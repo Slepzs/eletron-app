@@ -17,12 +17,17 @@ import type {
   Task,
 } from "@iamrobot/protocol";
 
+export interface ReplayDiagnostics {
+  readonly activeRunCheckpoints: Readonly<Record<RunId, number>>;
+}
+
 export const desktopIpcChannels = {
   cancelRun: "desktop-runtime:cancel-run",
   createProject: "desktop-runtime:create-project",
   createTask: "desktop-runtime:create-task",
   getRunDetails: "desktop-runtime:get-run-details",
   getHeartbeatMode: "desktop-runtime:get-heartbeat-mode",
+  getReplayDiagnostics: "desktop-runtime:get-replay-diagnostics",
   listRuns: "desktop-runtime:list-runs",
   resolveApproval: "desktop-runtime:resolve-approval",
   retryRun: "desktop-runtime:retry-run",
@@ -78,4 +83,5 @@ export interface DesktopApi {
   subscribeToRun(runId: RunId, onEvent: DesktopRunEventSubscriber): Promise<DesktopSubscription>;
   setHeartbeatMode(enabled: boolean): Promise<void>;
   getHeartbeatMode(): Promise<boolean>;
+  getReplayDiagnostics(): Promise<ReplayDiagnostics>;
 }

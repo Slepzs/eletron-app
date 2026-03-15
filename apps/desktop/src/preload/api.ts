@@ -12,6 +12,7 @@ export type { DesktopApi } from "../shared/desktop-api.js";
 export const desktopApi: DesktopApi = {
   setHeartbeatMode: (enabled) => ipcRenderer.invoke(desktopIpcChannels.setHeartbeatMode, enabled),
   getHeartbeatMode: () => ipcRenderer.invoke(desktopIpcChannels.getHeartbeatMode),
+  getReplayDiagnostics: () => ipcRenderer.invoke(desktopIpcChannels.getReplayDiagnostics),
   listRuns: () => ipcRenderer.invoke(desktopIpcChannels.listRuns),
   getRunDetails: (runId) => ipcRenderer.invoke(desktopIpcChannels.getRunDetails, runId),
   createProject: (input) => ipcRenderer.invoke(desktopIpcChannels.createProject, input),

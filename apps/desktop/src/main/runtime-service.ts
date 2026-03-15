@@ -22,6 +22,7 @@ import {
   type Task,
 } from "@iamrobot/protocol";
 
+import type { ReplayDiagnostics } from "../shared/desktop-api.js";
 import type { RunOutputReplayStore } from "./run-output-replay-store.js";
 
 type SnapshotSubscriber = (snapshot: RuntimeSnapshot) => void;
@@ -41,6 +42,7 @@ export interface DesktopRuntimeService {
   subscribeToRun(runId: RunId, onEvent: RunSubscriber): Promise<RuntimeSubscription>;
   setHeartbeatMode(enabled: boolean): Promise<void>;
   getHeartbeatMode(): Promise<boolean>;
+  getReplayDiagnostics(): Promise<ReplayDiagnostics>;
 }
 
 export class DefaultDesktopRuntimeService implements DesktopRuntimeService {
@@ -139,6 +141,16 @@ export class DefaultDesktopRuntimeService implements DesktopRuntimeService {
 
   getHeartbeatMode(): Promise<boolean> {
     return Promise.resolve(this.runtime.isHeartbeatEnabled());
+  }
+
+  getReplayDiagnostics(): Promise<ReplayDiagnostics> {
+    const activeRunCheckpoints: Record<RunId, number> = {};
+
+    for (const [runId, checkpointedChunkCount] of this.replayCheckpointCursor) {
+      activeRunCheckpoints[runId] = checkpointedChunkCount;
+    }
+
+    return Promise.resolve({ activeRunCheckpoints });
   }
 
   async subscribeToSnapshot(onSnapshot: SnapshotSubscriber): Promise<RuntimeSubscription> {

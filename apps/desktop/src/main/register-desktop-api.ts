@@ -44,6 +44,7 @@ export function registerDesktopApiHandlers(service: DesktopRuntimeService): void
     service.setHeartbeatMode(enabled),
   );
   ipcMain.handle(desktopIpcChannels.getHeartbeatMode, () => service.getHeartbeatMode());
+  ipcMain.handle(desktopIpcChannels.getReplayDiagnostics, () => service.getReplayDiagnostics());
   ipcMain.handle(desktopIpcChannels.selectDirectory, async (event) => {
     const win = BrowserWindow.fromWebContents(event.sender) ?? BrowserWindow.getFocusedWindow();
 
