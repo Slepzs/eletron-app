@@ -12,6 +12,7 @@ import {
   type AgentOutputChunk,
   type ApprovalRequest,
   MAX_LIVE_OUTPUT_CHUNKS,
+  REPLAY_CHECKPOINT_INTERVAL,
   type Project,
   type Run,
   type RunId,
@@ -47,6 +48,7 @@ export class DefaultDesktopRuntimeService implements DesktopRuntimeService {
   private readonly snapshotSubscribers = new Set<SnapshotSubscriber>();
   private readonly runSubscribers = new Map<RunId, Set<RunSubscriber>>();
   private readonly watchedRuns = new Map<RunId, RuntimeSubscription>();
+  private readonly replayCheckpointCursor = new Map<RunId, number>();
   private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
 
   constructor(
@@ -221,7 +223,13 @@ export class DefaultDesktopRuntimeService implements DesktopRuntimeService {
   }
 
   private publishRunEvent(runId: RunId, event: RuntimeRunEvent): void {
-    const history = appendRunEventHistory(this.runEventHistory.get(runId), event);
+    const existingHistory = this.runEventHistory.get(runId);
+
+    if (isDuplicateOutputChunk(existingHistory, event)) {
+      return;
+    }
+
+    const history = appendRunEventHistory(existingHistory, event);
     this.runEventHistory.set(runId, history);
 
     const subscribers = this.runSubscribers.get(runId);
@@ -300,6 +308,25 @@ function mergeRunEvents(
 
 function isAgentOutputChunk(event: RuntimeRunEvent): event is AgentOutputChunk {
   return event.type === "stdout" || event.type === "stderr";
+}
+
+function isDuplicateOutputChunk(
+  history: readonly RuntimeRunEvent[] | undefined,
+  event: RuntimeRunEvent,
+): boolean {
+  if (!isAgentOutputChunk(event) || history === undefined) {
+    return false;
+  }
+
+  return history.some(
+    (candidate) =>
+      isAgentOutputChunk(candidate) &&
+      candidate.type === event.type &&
+      candidate.runId === event.runId &&
+      candidate.sessionId === event.sessionId &&
+      candidate.timestamp === event.timestamp &&
+      candidate.content === event.content,
+  );
 }
 
 function shouldPersistRunOutputReplay(event: RuntimeRunEvent): boolean {
