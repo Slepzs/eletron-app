@@ -49,7 +49,7 @@ Stop the heartbeat loop and leave a clear message for the user only in these cas
 
 - A phase requires something that is explicitly constrained (e.g. building a Next.js surface)
 - A merge conflict cannot be resolved by reading the surrounding code intent
-- Two consecutive attempts at the same phase both fail `pnpm typecheck` and `pnpm lint`
+- Two consecutive attempts at the same phase both fail `bun run typecheck` and `bun run lint`
 - A required external credential, API key, or environment variable is missing and cannot be inferred
 - The delivery plan itself is ambiguous about what a phase requires and the ambiguity blocks progress
 
@@ -106,8 +106,8 @@ git log --oneline --grep="heartbeat: complete"
 Before committing a phase complete, every phase must pass:
 
 ```
-pnpm typecheck
-pnpm lint
+bun run typecheck
+bun run lint
 ```
 
 Fix all errors before committing. Do not skip these checks. Do not use `--no-verify`.

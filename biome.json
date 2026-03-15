@@ -1,8 +1,13 @@
 {
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
   "files": {
     "includes": [
       "apps/**",
-      "!apps/**/dist/**",
+      "!apps/**/dist",
       "packages/**",
       "package.json",
       "turbo.json",

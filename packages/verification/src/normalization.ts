@@ -7,6 +7,8 @@ import type {
 } from "./types.js";
 
 const SUMMARY_PREVIEW_LENGTH = 160;
+// biome-ignore lint/suspicious/noControlCharactersInRegex: intentionally matches ANSI escape sequences
+const ANSI_CODE_PATTERN = /\u001B\[[0-9;]*m/g;
 
 export function createVerificationResult(input: CreateVerificationResultInput): VerificationResult {
   return {
@@ -106,17 +108,24 @@ function getOutputPreviewSuffix(execution: VerificationCommandExecutionResult): 
 }
 
 function getOutputPreview(execution: VerificationCommandExecutionResult): string | null {
-  const preferredOutput = execution.stderr.trim() || execution.stdout.trim();
+  const preferredOutput =
+    stripAnsiCodes(execution.stderr).trim() || stripAnsiCodes(execution.stdout).trim();
   if (!preferredOutput) {
     return null;
   }
 
-  const [firstLine = preferredOutput] = preferredOutput
+  const lines = preferredOutput
     .split("\n")
     .map((line) => line.trim())
     .filter(Boolean);
 
-  return truncateSummary(firstLine);
+  const firstMeaningfulLine = lines.find((line) => !line.startsWith("$ ")) ?? lines[0];
+
+  return firstMeaningfulLine ? truncateSummary(firstMeaningfulLine) : null;
+}
+
+function stripAnsiCodes(value: string): string {
+  return value.replace(ANSI_CODE_PATTERN, "");
 }
 
 function truncateSummary(summary: string): string {

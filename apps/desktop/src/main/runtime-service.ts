@@ -10,17 +10,17 @@ import type {
 } from "@iamrobot/orchestration";
 import type {
   ApprovalRequest,
-  DomainEvent,
   Project,
   Run,
   RunId,
   RuntimeRunDetails,
+  RuntimeRunEvent,
   RuntimeSnapshot,
   Task,
 } from "@iamrobot/protocol";
 
 type SnapshotSubscriber = (snapshot: RuntimeSnapshot) => void;
-type RunSubscriber = (event: DomainEvent) => void;
+type RunSubscriber = (event: RuntimeRunEvent) => void;
 
 export interface DesktopRuntimeService {
   listRuns(): Promise<RuntimeSnapshot>;
@@ -39,6 +39,7 @@ export interface DesktopRuntimeService {
 }
 
 export class DefaultDesktopRuntimeService implements DesktopRuntimeService {
+  private readonly runEventHistory = new Map<RunId, RuntimeRunEvent[]>();
   private readonly snapshotSubscribers = new Set<SnapshotSubscriber>();
   private readonly runSubscribers = new Map<RunId, Set<RunSubscriber>>();
   private readonly watchedRuns = new Map<RunId, RuntimeSubscription>();
@@ -147,7 +148,14 @@ export class DefaultDesktopRuntimeService implements DesktopRuntimeService {
       throw new Error(`Unknown run: ${runId}`);
     }
 
-    for (const event of details.events) {
+    const existingHistory = this.runEventHistory.get(runId);
+    const initialEvents = existingHistory ?? details.events;
+
+    if (existingHistory === undefined) {
+      this.runEventHistory.set(runId, [...details.events]);
+    }
+
+    for (const event of initialEvents) {
       onEvent(event);
     }
 
@@ -186,13 +194,20 @@ export class DefaultDesktopRuntimeService implements DesktopRuntimeService {
       }
 
       this.publishRunEvent(runId, event);
-      void this.publishSnapshot();
+
+      if (isDomainEvent(event)) {
+        void this.publishSnapshot();
+      }
     });
 
     this.watchedRuns.set(runId, unsubscribe);
   }
 
-  private publishRunEvent(runId: RunId, event: DomainEvent): void {
+  private publishRunEvent(runId: RunId, event: RuntimeRunEvent): void {
+    const history = this.runEventHistory.get(runId) ?? [];
+    history.push(event);
+    this.runEventHistory.set(runId, history);
+
     const subscribers = this.runSubscribers.get(runId);
 
     if (subscribers === undefined) {
@@ -215,4 +230,8 @@ export class DefaultDesktopRuntimeService implements DesktopRuntimeService {
       subscriber(snapshot);
     }
   }
+}
+
+function isDomainEvent(event: RuntimeRunEvent): boolean {
+  return event.type !== "stdout" && event.type !== "stderr";
 }

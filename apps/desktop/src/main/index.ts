@@ -109,7 +109,7 @@ function createRendererUnavailableDataUrl(): string {
             The Electron main process and preload bridge started correctly, but the renderer dev
             server is not running on <strong>${desktopRendererDevUrl}</strong>.
           </p>
-          <code>pnpm --filter @iamrobot/desktop run dev:renderer</code>
+          <code>bun run --filter @iamrobot/desktop dev:renderer</code>
         </main>
       </body>
     </html>

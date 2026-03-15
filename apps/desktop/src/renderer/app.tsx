@@ -7,6 +7,7 @@ import { ProjectSetupCard } from "./components/project-setup-card";
 import { RunWorkspace } from "./components/run-workspace";
 import { Sidebar } from "./components/sidebar";
 import { TaskComposer } from "./components/task-composer";
+import { useLiveRunOutput } from "./hooks/use-live-run-output";
 import { useRuntimeSnapshot } from "./hooks/use-runtime-snapshot";
 import { useSelectedRunDetails } from "./hooks/use-selected-run-details";
 
@@ -93,6 +94,7 @@ export function App() {
   >(null);
   const { error: snapshotError, selectedRunId, selectRun, snapshot } = useRuntimeSnapshot();
   const runDetails = useSelectedRunDetails(selectedRunId, snapshot);
+  const liveRunOutput = useLiveRunOutput(selectedRunId);
 
   const sortedRuns = [...snapshot.runs].sort((left, right) =>
     right.run.startedAt.localeCompare(left.run.startedAt),
@@ -108,10 +110,10 @@ export function App() {
   // When autonomous mode is active and no run is manually selected,
   // auto-track the currently active run so its details are visible.
   useEffect(() => {
-    if (isHeartbeatActive && !selectedRunId && snapshot.activeRunId) {
+    if (isHeartbeatActive && !isManualRunSelection && snapshot.activeRunId) {
       selectRun(snapshot.activeRunId);
     }
-  }, [isHeartbeatActive, snapshot.activeRunId, selectedRunId, selectRun]);
+  }, [isHeartbeatActive, isManualRunSelection, snapshot.activeRunId, selectRun]);
 
   // Auto-open composer on first launch when there are no runs
   useEffect(() => {
@@ -159,7 +161,16 @@ export function App() {
       setIsComposing(false);
       selectRun(result.run.runId);
     } catch (error) {
-      setTaskError(error instanceof Error ? error.message : "Unable to create and start the task.");
+      const message =
+        error instanceof Error ? error.message : "Unable to create and start the task.";
+
+      if (message.includes("already active") && snapshot.activeRunId) {
+        setIsComposing(false);
+        setIsManualRunSelection(true);
+        selectRun(snapshot.activeRunId);
+      }
+
+      setTaskError(message);
     } finally {
       setTaskBusy(false);
     }
@@ -304,6 +315,8 @@ export function App() {
           ) : null}
           {isHeartbeatActive && !isManualRunSelection ? (
             <AutonomousActivityView
+              liveOutputEntries={liveRunOutput.entries}
+              liveOutputError={liveRunOutput.error}
               onSelectRun={handleSelectRun}
               runDetails={runDetails.details}
               selectedRunId={selectedRunId}
@@ -313,6 +326,8 @@ export function App() {
             <RunWorkspace
               details={runDetails.details}
               error={runDetails.error}
+              liveOutputEntries={liveRunOutput.entries}
+              liveOutputError={liveRunOutput.error}
               loading={runDetails.loading}
               onApprove={(approvalRequestId) =>
                 void handleApprovalDecision(approvalRequestId, "approved")

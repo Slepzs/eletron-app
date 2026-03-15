@@ -3,6 +3,7 @@ import {
   ApprovalQueueCard,
   ArtifactListCard,
   EventTimelineCard,
+  LiveOutputCard,
   RunOverviewCard,
   SectionCard,
   SessionListCard,
@@ -14,6 +15,8 @@ import type { CSSProperties } from "react";
 export interface RunWorkspaceProps {
   readonly details: RuntimeRunDetails | null;
   readonly error: string | null;
+  readonly liveOutputEntries: readonly import("@iamrobot/protocol").AgentOutputChunk[];
+  readonly liveOutputError: string | null;
   readonly loading: boolean;
   readonly onApprove: (approvalRequestId: ApprovalRequest["approvalRequestId"]) => void;
   readonly onCancelRun: () => void;
@@ -25,6 +28,8 @@ export interface RunWorkspaceProps {
 export function RunWorkspace({
   details,
   error,
+  liveOutputEntries,
+  liveOutputError,
   loading,
   onApprove,
   onCancelRun,
@@ -87,8 +92,9 @@ export function RunWorkspace({
   const hasPendingApproval = details.approvalRequests.some(
     (request) => request.decision === "pending",
   );
-  const canRetry = details.run.status === "blocked" || details.run.status === "failed";
-  const canCancel = details.run.status === "in_progress";
+  const canRetry =
+    details.run.status === "failed" || (details.run.status === "blocked" && !hasPendingApproval);
+  const canCancel = details.run.completedAt === undefined;
 
   return (
     <div style={{ display: "grid", gap: "1rem" }}>
@@ -143,6 +149,11 @@ export function RunWorkspace({
         />
         <SessionListCard sessions={details.sessions} />
       </div>
+      <LiveOutputCard
+        entries={liveOutputEntries}
+        error={liveOutputError}
+        sessions={details.sessions}
+      />
       <ArtifactListCard artifacts={details.artifacts} />
       <EventTimelineCard events={details.events} />
     </div>

@@ -22,8 +22,8 @@ The Tailwind scaffold lives at `apps/desktop/src/renderer/styles/tailwind.css`.
 
 The current scripts are:
 
-- `pnpm --filter @iamrobot/desktop tailwind:build`
-- `pnpm --filter @iamrobot/desktop tailwind:watch`
+- `bun run --filter @iamrobot/desktop tailwind:build`
+- `bun run --filter @iamrobot/desktop tailwind:watch`
 
 These scripts prepare a stylesheet for the renderer migration from inline styles to Tailwind classes.
 

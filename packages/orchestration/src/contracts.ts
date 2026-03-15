@@ -6,11 +6,11 @@ import type {
   ApprovalDecision,
   ApprovalKind,
   ApprovalRequest,
-  DomainEvent,
   Project,
   Run,
   RunId,
   RuntimeRunDetails,
+  RuntimeRunEvent,
   RuntimeSnapshot,
   StructuredHandoff,
   StructuredHandoffSpec,
@@ -113,7 +113,7 @@ export interface CreateOrchestrationRuntimeOptions {
   readonly policyHooks?: RuntimePolicyHooks;
 }
 
-export type RuntimeEventSubscriber = (event: DomainEvent) => void;
+export type RuntimeEventSubscriber = (event: RuntimeRunEvent) => void;
 export type RuntimeSubscription = () => void;
 
 export interface OrchestrationRuntime {

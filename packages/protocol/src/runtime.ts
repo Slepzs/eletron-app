@@ -1,4 +1,5 @@
 import type {
+  AgentOutputChannel,
   AgentSession,
   ApprovalRequest,
   Artifact,
@@ -23,6 +24,16 @@ export interface RuntimeRunDetails extends RuntimeRunSummary {
   readonly approvalRequests: readonly ApprovalRequest[];
   readonly events: readonly DomainEvent[];
 }
+
+export interface AgentOutputChunk {
+  readonly type: AgentOutputChannel;
+  readonly runId: Run["runId"];
+  readonly sessionId: AgentSession["sessionId"];
+  readonly content: string;
+  readonly timestamp: string;
+}
+
+export type RuntimeRunEvent = DomainEvent | AgentOutputChunk;
 
 export interface RuntimeSnapshot {
   readonly runs: readonly RuntimeRunSummary[];

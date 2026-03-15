@@ -1,5 +1,6 @@
 import type {
   AgentKind,
+  AgentOutputChunk,
   AgentRole,
   AgentSession,
   AgentSessionStatus,
@@ -22,12 +23,7 @@ export interface StartAgentSessionInput {
   readonly handoff: StructuredHandoffSpec;
 }
 
-export interface AgentStreamChunk {
-  readonly type: "stderr" | "stdout";
-  readonly sessionId: AgentSession["sessionId"];
-  readonly content: string;
-  readonly timestamp: string;
-}
+export type AgentStreamChunk = AgentOutputChunk;
 
 export interface AgentHandoffEvent {
   readonly type: "handoff";

@@ -1,9 +1,17 @@
-import type { RunId, RuntimeRunDetails, RuntimeRunSummary, RuntimeSnapshot } from "@iamrobot/protocol";
-import { EventTimelineCard, SessionListCard } from "@iamrobot/ui";
+import type {
+  AgentOutputChunk,
+  RunId,
+  RuntimeRunDetails,
+  RuntimeRunSummary,
+  RuntimeSnapshot,
+} from "@iamrobot/protocol";
+import { EventTimelineCard, LiveOutputCard, SessionListCard } from "@iamrobot/ui";
 
 const RUN_STAGES = ["planning", "implementing", "reviewing", "verifying", "complete"] as const;
 
 interface AutonomousActivityViewProps {
+  readonly liveOutputEntries: readonly AgentOutputChunk[];
+  readonly liveOutputError: string | null;
   readonly snapshot: RuntimeSnapshot;
   readonly runDetails: RuntimeRunDetails | null;
   readonly onSelectRun: (runId: RunId) => void;
@@ -11,6 +19,8 @@ interface AutonomousActivityViewProps {
 }
 
 export function AutonomousActivityView({
+  liveOutputEntries,
+  liveOutputError,
   snapshot,
   runDetails,
   onSelectRun,
@@ -74,13 +84,17 @@ export function AutonomousActivityView({
       </div>
 
       {/* Active run */}
-      {activeRun ? (
-        <ActiveRunCard run={activeRun} details={runDetails} />
-      ) : (
-        <WaitingCard />
-      )}
+      {activeRun ? <ActiveRunCard run={activeRun} details={runDetails} /> : <WaitingCard />}
 
       {/* Sessions + Events side by side */}
+      {runDetails ? (
+        <LiveOutputCard
+          entries={liveOutputEntries}
+          error={liveOutputError}
+          sessions={runDetails.sessions}
+        />
+      ) : null}
+
       {runDetails ? (
         <div
           style={{
@@ -196,7 +210,15 @@ function ActiveRunCard({ run, details }: ActiveRunCardProps) {
                 style={{ alignItems: "center", display: "flex", flex: isLast ? 0 : 1, minWidth: 0 }}
               >
                 {/* Step node */}
-                <div style={{ alignItems: "center", display: "flex", flexDirection: "column", flexShrink: 0, gap: "0.35rem" }}>
+                <div
+                  style={{
+                    alignItems: "center",
+                    display: "flex",
+                    flexDirection: "column",
+                    flexShrink: 0,
+                    gap: "0.35rem",
+                  }}
+                >
                   <div
                     style={{
                       alignItems: "center",
@@ -218,7 +240,9 @@ function ActiveRunCard({ run, details }: ActiveRunCardProps) {
                     }}
                   >
                     {isPast ? (
-                      <span style={{ color: "#4ade80", fontSize: "0.7rem", fontWeight: 700 }}>✓</span>
+                      <span style={{ color: "#4ade80", fontSize: "0.7rem", fontWeight: 700 }}>
+                        ✓
+                      </span>
                     ) : isCurrent ? (
                       <span
                         style={{

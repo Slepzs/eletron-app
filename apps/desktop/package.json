@@ -31,7 +31,7 @@
     "dev:renderer": "vite",
     "dev:electron": "NODE_OPTIONS='--import tsx/esm' electron src/main/index.ts",
     "build:preload": "node build-preload.mjs",
-    "build": "pnpm run build:preload && vite build",
+    "build": "bun run build:preload && vite build",
     "tailwind:build": "tailwindcss -i ./src/renderer/styles/tailwind.css -o ./src/renderer/styles/generated.css",
     "tailwind:watch": "tailwindcss -i ./src/renderer/styles/tailwind.css -o ./src/renderer/styles/generated.css --watch",
     "typecheck": "tsc --noEmit -p tsconfig.json",

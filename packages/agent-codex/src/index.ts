@@ -47,6 +47,8 @@ interface CodexSessionRecord {
   turnQueue: Promise<void>;
 }
 
+const PROCESS_TERMINATION_TIMEOUT_MS = 2_000;
+
 export interface CodexCliAdapterOptions {
   readonly artifactsRoot?: string;
   readonly codexCommand?: string;
@@ -54,6 +56,80 @@ export interface CodexCliAdapterOptions {
   readonly createSessionId?: () => AgentSession["sessionId"];
   readonly createTimestamp?: () => string;
   readonly spawnCodex?: SpawnCodexProcess;
+}
+
+function createDelay(timeoutMs: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, timeoutMs);
+  });
+}
+
+function hasProcessExited(process: ChildProcessWithoutNullStreams): boolean {
+  return process.exitCode !== null || process.signalCode !== null;
+}
+
+function waitForProcessExit(
+  process: ChildProcessWithoutNullStreams,
+  timeoutMs: number,
+): Promise<boolean> {
+  if (hasProcessExited(process)) {
+    return Promise.resolve(true);
+  }
+
+  return new Promise((resolve) => {
+    let settled = false;
+    const timeout = setTimeout(() => {
+      finish(false);
+    }, timeoutMs);
+
+    const finish = (didExit: boolean) => {
+      if (settled) {
+        return;
+      }
+
+      settled = true;
+      clearTimeout(timeout);
+      process.off("close", onClose);
+      process.off("exit", onExit);
+      process.off("error", onError);
+      resolve(didExit);
+    };
+
+    const onClose = () => finish(true);
+    const onExit = () => finish(true);
+    const onError = () => finish(true);
+
+    process.once("close", onClose);
+    process.once("exit", onExit);
+    process.once("error", onError);
+  });
+}
+
+async function terminateProcess(
+  process: ChildProcessWithoutNullStreams,
+  timeoutMs: number,
+): Promise<void> {
+  if (hasProcessExited(process)) {
+    return;
+  }
+
+  try {
+    process.kill("SIGTERM");
+  } catch {
+    return;
+  }
+
+  if (await waitForProcessExit(process, timeoutMs)) {
+    return;
+  }
+
+  try {
+    process.kill("SIGKILL");
+  } catch {
+    return;
+  }
+
+  await waitForProcessExit(process, timeoutMs);
 }
 
 export class CodexCliAdapter implements AgentAdapter {
@@ -199,6 +275,7 @@ export class CodexCliAdapter implements AgentAdapter {
       record.artifactStore.recordStreamChunk("stderr", chunk);
       this.publishEvent(record, {
         type: "stderr",
+        runId: record.session.runId,
         sessionId: record.session.sessionId,
         content: chunk,
         timestamp: this.createTimestamp(),
@@ -273,6 +350,7 @@ export class CodexCliAdapter implements AgentAdapter {
         record.artifactStore.recordStreamChunk("stdout", `${rawLine}\n`);
         this.publishEvent(record, {
           type: "stdout",
+          runId: record.session.runId,
           sessionId: record.session.sessionId,
           content: `${rawLine}\n`,
           timestamp: this.createTimestamp(),
@@ -293,6 +371,7 @@ export class CodexCliAdapter implements AgentAdapter {
       record.artifactStore.recordStreamChunk("stdout", `${rawEvent.item.text}\n`);
       this.publishEvent(record, {
         type: "stdout",
+        runId: record.session.runId,
         sessionId: record.session.sessionId,
         content: rawEvent.item.text,
         timestamp: this.createTimestamp(),
@@ -323,16 +402,22 @@ export class CodexCliAdapter implements AgentAdapter {
     record.terminated = true;
 
     if (!record.activeProcess) {
-      this.updateSessionStatus(record, "interrupted");
+      if (record.session.status === "pending" || record.session.status === "running") {
+        this.updateSessionStatus(record, "interrupted");
+      }
       return;
     }
 
-    record.activeProcess.kill("SIGTERM");
+    await terminateProcess(record.activeProcess, PROCESS_TERMINATION_TIMEOUT_MS);
 
     try {
-      await record.turnQueue;
+      await Promise.race([record.turnQueue, createDelay(PROCESS_TERMINATION_TIMEOUT_MS)]);
     } catch {
       return;
+    }
+
+    if (record.session.status === "pending" || record.session.status === "running") {
+      this.updateSessionStatus(record, "interrupted");
     }
   }
 

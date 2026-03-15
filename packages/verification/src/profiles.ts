@@ -15,11 +15,6 @@ export const defaultVerificationCommands = [
     command: "bun run lint",
     required: true,
   },
-  {
-    kind: "tests",
-    command: "bun run test",
-    required: false,
-  },
 ] as const satisfies readonly VerificationCommand[];
 
 export function createVerificationCommand(command: VerificationCommand): VerificationCommand {

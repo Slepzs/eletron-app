@@ -136,6 +136,7 @@ The renderer is responsible for:
 - task creation
 - run history
 - live logs
+- live session output panes backed by run subscriptions
 - diff inspection
 - approval prompts
 - settings for CLI paths, policies, and timeouts
@@ -155,6 +156,7 @@ The local runtime is the core of the product and should own:
 - verification runs
 - artifact collection
 - final verdict generation
+- authoritative cancellation that resolves pending approvals, force-terminates agent subprocesses when needed, and clears the active run state
 
 This should live in the Electron main process or dedicated Node workers, not in the renderer.
 
@@ -320,7 +322,7 @@ The MVP should include:
 - `Codex` implementer role
 - git worktree isolation
 - structured handoffs
-- verification with `typecheck`, `lint`, and `tests`
+- verification with default `typecheck` and `lint` gates, plus profile-specific optional checks
 - a final result screen with summary, diff, and logs
 
 The MVP should exclude:

@@ -8,11 +8,11 @@ import type {
 } from "@iamrobot/orchestration";
 import type {
   ApprovalRequest,
-  DomainEvent,
   Project,
   Run,
   RunId,
   RuntimeRunDetails,
+  RuntimeRunEvent,
   RuntimeSnapshot,
   Task,
 } from "@iamrobot/protocol";
@@ -38,7 +38,7 @@ export const desktopIpcChannels = {
 } as const;
 
 export type DesktopSubscription = () => void;
-export type DesktopRunEventSubscriber = (event: DomainEvent) => void;
+export type DesktopRunEventSubscriber = (event: RuntimeRunEvent) => void;
 export type DesktopSnapshotSubscriber = (snapshot: RuntimeSnapshot) => void;
 
 export interface DesktopSnapshotSubscriptionInput {
@@ -60,7 +60,7 @@ export interface DesktopSnapshotEventPayload {
 
 export interface DesktopRunEventPayload {
   readonly subscriptionId: string;
-  readonly event: DomainEvent;
+  readonly event: RuntimeRunEvent;
 }
 
 export interface DesktopApi {

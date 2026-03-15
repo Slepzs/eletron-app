@@ -56,8 +56,78 @@ interface ClaudeExecutionState {
   terminationRequested: boolean;
 }
 
+const PROCESS_TERMINATION_TIMEOUT_MS = 2_000;
+
 export interface ClaudeCodeAdapterOptions {
   readonly executablePath?: string;
+}
+
+function createDelay(timeoutMs: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, timeoutMs);
+  });
+}
+
+function hasProcessExited(process: ClaudeChildProcess): boolean {
+  return process.exitCode !== null || process.signalCode !== null;
+}
+
+function waitForProcessExit(process: ClaudeChildProcess, timeoutMs: number): Promise<boolean> {
+  if (hasProcessExited(process)) {
+    return Promise.resolve(true);
+  }
+
+  return new Promise((resolve) => {
+    let settled = false;
+    const timeout = setTimeout(() => {
+      finish(false);
+    }, timeoutMs);
+
+    const finish = (didExit: boolean) => {
+      if (settled) {
+        return;
+      }
+
+      settled = true;
+      clearTimeout(timeout);
+      process.off("close", onClose);
+      process.off("exit", onExit);
+      process.off("error", onError);
+      resolve(didExit);
+    };
+
+    const onClose = () => finish(true);
+    const onExit = () => finish(true);
+    const onError = () => finish(true);
+
+    process.once("close", onClose);
+    process.once("exit", onExit);
+    process.once("error", onError);
+  });
+}
+
+async function terminateProcess(process: ClaudeChildProcess, timeoutMs: number): Promise<void> {
+  if (hasProcessExited(process)) {
+    return;
+  }
+
+  try {
+    process.kill("SIGTERM");
+  } catch {
+    return;
+  }
+
+  if (await waitForProcessExit(process, timeoutMs)) {
+    return;
+  }
+
+  try {
+    process.kill("SIGKILL");
+  } catch {
+    return;
+  }
+
+  await waitForProcessExit(process, timeoutMs);
 }
 
 function resolveAdditionalDirectories(
@@ -81,11 +151,13 @@ function resolveAdditionalDirectories(
 
 function createStreamChunk(
   type: AgentStreamChunk["type"],
+  runId: AgentStreamChunk["runId"],
   sessionId: AgentSession["sessionId"],
   content: string,
 ): AgentStreamChunk {
   return {
     type,
+    runId,
     sessionId,
     content,
     timestamp: createTimestamp(),
@@ -318,8 +390,11 @@ export class ClaudeCodeAdapter implements AgentAdapter {
     sessionState.closed = true;
 
     if (sessionState.activeProcess !== undefined) {
-      sessionState.activeProcess.kill("SIGTERM");
-      return;
+      await terminateProcess(sessionState.activeProcess, PROCESS_TERMINATION_TIMEOUT_MS);
+      await Promise.race([
+        sessionState.work.catch(() => undefined),
+        createDelay(PROCESS_TERMINATION_TIMEOUT_MS),
+      ]);
     }
 
     if (sessionState.session.status === "pending" || sessionState.session.status === "running") {
@@ -367,18 +442,29 @@ export class ClaudeCodeAdapter implements AgentAdapter {
       childProcess.stdout.on("data", (chunk: string) => {
         executionState.stdout += chunk;
         consumeClaudeStdoutChunk(executionState.streamState, chunk);
-        this.#emitEvent(sessionState, createStreamChunk("stdout", sessionState.sessionId, chunk));
+        this.#emitEvent(
+          sessionState,
+          createStreamChunk("stdout", sessionState.session.runId, sessionState.sessionId, chunk),
+        );
       });
 
       childProcess.stderr.on("data", (chunk: string) => {
         executionState.stderr += chunk;
-        this.#emitEvent(sessionState, createStreamChunk("stderr", sessionState.sessionId, chunk));
+        this.#emitEvent(
+          sessionState,
+          createStreamChunk("stderr", sessionState.session.runId, sessionState.sessionId, chunk),
+        );
       });
 
       childProcess.on("error", (error) => {
         this.#emitEvent(
           sessionState,
-          createStreamChunk("stderr", sessionState.sessionId, `${error.message}\n`),
+          createStreamChunk(
+            "stderr",
+            sessionState.session.runId,
+            sessionState.sessionId,
+            `${error.message}\n`,
+          ),
         );
         sessionState.activeProcess = undefined;
         this.#updateSessionStatus(sessionState, "failed");

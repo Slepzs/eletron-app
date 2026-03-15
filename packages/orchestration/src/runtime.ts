@@ -9,6 +9,7 @@ import type {
 import type { PreparedWorktree } from "@iamrobot/git";
 import type {
   AgentKind,
+  AgentOutputChunk,
   AgentRole,
   AgentSession,
   ApprovalRequest,
@@ -19,6 +20,7 @@ import type {
   RunId,
   RunStage,
   RuntimeRunDetails,
+  RuntimeRunEvent,
   RuntimeSnapshot,
   StructuredHandoff,
   Task,
@@ -79,6 +81,7 @@ interface ActiveRunState {
   latestVerdict: Verdict | undefined;
   readonly activeSessions: Map<AgentRole, AgentSessionHandle>;
   readonly approvals: Map<ApprovalRequest["approvalRequestId"], PendingApproval>;
+  readonly outputChunks: AgentOutputChunk[];
   readonly worktrees: Partial<Record<"implementer" | "planner", PreparedWorktree>>;
   cancelled: boolean;
 }
@@ -232,7 +235,10 @@ class DefaultOrchestrationRuntime implements OrchestrationRuntime {
       throw new Error(`Unknown run: ${runId}`);
     }
 
-    for (const event of details.events) {
+    for (const event of getInitialRunEvents(
+      details.events,
+      this.activeRuns.get(runId)?.outputChunks,
+    )) {
       onEvent(event);
     }
 
@@ -354,13 +360,38 @@ class DefaultOrchestrationRuntime implements OrchestrationRuntime {
 
     if (activeState) {
       activeState.cancelled = true;
-
-      await Promise.all(
-        [...activeState.activeSessions.values()].map((handle) => handle.terminate()),
-      );
     }
 
-    const nextRun = await this.recordVerdictAndUpdateRun(details.run, createCancelledVerdict());
+    await Promise.allSettled([
+      ...details.approvalRequests
+        .filter((approvalRequest) => approvalRequest.decision === "pending")
+        .map((approvalRequest) =>
+          this.resolveApproval({
+            approvalRequestId: approvalRequest.approvalRequestId,
+            decision: "rejected",
+          }),
+        ),
+      ...(activeState
+        ? [...activeState.activeSessions.values()].map((handle) => handle.terminate())
+        : []),
+    ]);
+
+    const latestDetails = await this.options.store.getRunDetails(runId);
+
+    if (!latestDetails) {
+      this.activeRuns.delete(runId);
+      return null;
+    }
+
+    if (latestDetails.run.stage === "complete") {
+      this.activeRuns.delete(runId);
+      return latestDetails.run;
+    }
+
+    const nextRun = await this.recordVerdictAndUpdateRun(
+      latestDetails.run,
+      createCancelledVerdict(),
+    );
 
     this.activeRuns.delete(runId);
     return nextRun;
@@ -399,6 +430,7 @@ class DefaultOrchestrationRuntime implements OrchestrationRuntime {
       latestVerdict: input.latestVerdict,
       activeSessions: new Map(),
       approvals: new Map(),
+      outputChunks: [],
       worktrees: {},
       cancelled: false,
     };
@@ -708,6 +740,12 @@ class DefaultOrchestrationRuntime implements OrchestrationRuntime {
     readonly handoff?: StructuredHandoff;
     readonly terminalStatus?: AgentSession["status"];
   }> {
+    if (isAgentOutputChunk(event)) {
+      state.outputChunks.push(event);
+      this.publishRunEvent(event);
+      return {};
+    }
+
     if (isAgentSessionStatusEvent(event)) {
       const nextSession = handle.session;
       await this.options.store.sessions.save(nextSession);
@@ -970,7 +1008,11 @@ class DefaultOrchestrationRuntime implements OrchestrationRuntime {
 
   private async recordEvent(event: DomainEvent): Promise<void> {
     await this.options.store.events.record(event);
-    const subscribers = this.runSubscribers.get(getRunIdFromEvent(event));
+    this.publishRunEvent(event);
+  }
+
+  private publishRunEvent(event: RuntimeRunEvent): void {
+    const subscribers = this.runSubscribers.get(getRunIdFromRuntimeEvent(event));
 
     if (!subscribers) {
       return;
@@ -1040,7 +1082,24 @@ function getPolicyHook(
   }
 }
 
-function getRunIdFromEvent(event: DomainEvent): RunId {
+function getInitialRunEvents(
+  events: RuntimeRunDetails["events"],
+  outputChunks: readonly AgentOutputChunk[] | undefined,
+): readonly RuntimeRunEvent[] {
+  if (!outputChunks || outputChunks.length === 0) {
+    return events;
+  }
+
+  return [...events, ...outputChunks].sort((left, right) =>
+    left.timestamp.localeCompare(right.timestamp),
+  );
+}
+
+function getRunIdFromRuntimeEvent(event: RuntimeRunEvent): RunId {
+  if (isAgentOutputChunk(event)) {
+    return event.runId;
+  }
+
   switch (event.type) {
     case "run.created":
       return event.run.runId;
@@ -1055,6 +1114,10 @@ function isAgentSessionStatusEvent(
   event: AgentStreamEvent,
 ): event is Extract<AgentStreamEvent, { readonly type: "session.status" }> {
   return event.type === "session.status";
+}
+
+function isAgentOutputChunk(event: AgentStreamEvent | RuntimeRunEvent): event is AgentOutputChunk {
+  return event.type === "stdout" || event.type === "stderr";
 }
 
 function isAgentHandoffEvent(

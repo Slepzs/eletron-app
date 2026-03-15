@@ -1,5 +1,7 @@
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
+import { homedir } from "node:os";
+import path from "node:path";
 
 import type { VerificationCheckResult, VerificationResultId } from "@iamrobot/protocol";
 import { createEntityId, createTimestamp } from "@iamrobot/protocol";
@@ -45,10 +47,7 @@ export async function executeVerificationCommand(
 
     const child = spawn(input.command.command, {
       cwd: input.cwd,
-      env: {
-        ...process.env,
-        ...input.env,
-      },
+      env: createVerificationCommandEnv(input.env),
       shell: true,
       signal: input.signal,
       stdio: ["ignore", "pipe", "pipe"],
@@ -147,4 +146,24 @@ class ProcessVerificationRunner implements VerificationRunner {
       completedAt: this.createCompletedAt(),
     });
   }
+}
+
+function createVerificationCommandEnv(env: NodeJS.ProcessEnv | undefined): NodeJS.ProcessEnv {
+  const bunInstallPath = path.join(homedir(), ".bun");
+  const bunBinPath = path.join(bunInstallPath, "bin");
+  const mergedEnv: NodeJS.ProcessEnv = {
+    ...process.env,
+    ...env,
+  };
+  const pathEntries = (mergedEnv.PATH ?? "").split(path.delimiter).filter(Boolean);
+
+  if (!pathEntries.includes(bunBinPath)) {
+    mergedEnv.PATH = [bunBinPath, ...pathEntries].join(path.delimiter);
+  }
+
+  if (!mergedEnv.BUN_INSTALL) {
+    mergedEnv.BUN_INSTALL = bunInstallPath;
+  }
+
+  return mergedEnv;
 }

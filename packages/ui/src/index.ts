@@ -3,6 +3,7 @@ export * from "./artifact-list-card";
 export * from "./cn";
 export * from "./diagnostics-report";
 export * from "./event-timeline-card";
+export * from "./live-output-card";
 export * from "./run-list-card";
 export * from "./run-overview-card";
 export * from "./section-card";
