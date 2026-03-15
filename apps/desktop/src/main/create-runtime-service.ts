@@ -7,6 +7,7 @@ import { createOrchestrationRuntime } from "@iamrobot/orchestration";
 import { createDefaultVerificationProfile, createVerificationRunner } from "@iamrobot/verification";
 
 import { createDesktopPersistenceStore } from "./persistence.js";
+import { createRunOutputReplayStore } from "./run-output-replay-store.js";
 import { DefaultDesktopRuntimeService, type DesktopRuntimeService } from "./runtime-service.js";
 
 export interface CreateDesktopRuntimeServiceInput {
@@ -33,6 +34,10 @@ export async function createDesktopRuntimeService(
       prepare: prepareIsolatedWorktree,
     },
   });
+  const runOutputReplayStore = createRunOutputReplayStore({
+    artifactsRoot,
+    store,
+  });
 
-  return new DefaultDesktopRuntimeService(runtime);
+  return new DefaultDesktopRuntimeService(runtime, runOutputReplayStore);
 }

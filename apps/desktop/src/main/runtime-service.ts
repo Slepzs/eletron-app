@@ -21,6 +21,8 @@ import {
   type Task,
 } from "@iamrobot/protocol";
 
+import type { RunOutputReplayStore } from "./run-output-replay-store.js";
+
 type SnapshotSubscriber = (snapshot: RuntimeSnapshot) => void;
 type RunSubscriber = (event: RuntimeRunEvent) => void;
 
@@ -47,7 +49,10 @@ export class DefaultDesktopRuntimeService implements DesktopRuntimeService {
   private readonly watchedRuns = new Map<RunId, RuntimeSubscription>();
   private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
 
-  constructor(private readonly runtime: OrchestrationRuntime) {}
+  constructor(
+    private readonly runtime: OrchestrationRuntime,
+    private readonly runOutputReplayStore: RunOutputReplayStore,
+  ) {}
 
   listRuns(): Promise<RuntimeSnapshot> {
     return this.runtime.listRuns();
@@ -151,10 +156,12 @@ export class DefaultDesktopRuntimeService implements DesktopRuntimeService {
     }
 
     const existingHistory = this.runEventHistory.get(runId);
-    const initialEvents = existingHistory ?? details.events;
+    const initialEvents =
+      existingHistory ??
+      mergeRunEvents(details.events, await this.runOutputReplayStore.load(details));
 
     if (existingHistory === undefined) {
-      this.runEventHistory.set(runId, [...details.events]);
+      this.runEventHistory.set(runId, [...initialEvents]);
     }
 
     for (const event of initialEvents) {
@@ -199,6 +206,10 @@ export class DefaultDesktopRuntimeService implements DesktopRuntimeService {
 
       if (isDomainEvent(event)) {
         void this.publishSnapshot();
+      }
+
+      if (shouldPersistRunOutputReplay(event)) {
+        void this.persistRunOutputReplay(runId);
       }
 
       if (isTerminalRunEvent(event)) {
@@ -246,6 +257,15 @@ export class DefaultDesktopRuntimeService implements DesktopRuntimeService {
     unsubscribe();
     this.watchedRuns.delete(runId);
   }
+
+  private async persistRunOutputReplay(runId: RunId): Promise<void> {
+    const outputChunks = this.runEventHistory.get(runId)?.filter(isAgentOutputChunk) ?? [];
+    const didPersist = await this.runOutputReplayStore.save(runId, outputChunks);
+
+    if (didPersist) {
+      await this.publishSnapshot();
+    }
+  }
 }
 
 function isDomainEvent(event: RuntimeRunEvent): boolean {
@@ -265,8 +285,30 @@ function appendRunEventHistory(
   );
 }
 
+function mergeRunEvents(
+  domainEvents: RuntimeRunDetails["events"],
+  outputChunks: readonly AgentOutputChunk[],
+): RuntimeRunEvent[] {
+  const history = [...domainEvents, ...outputChunks];
+  const replayedDomainEvents = history.filter(isDomainEvent);
+  const replayedOutputChunks = history.filter(isAgentOutputChunk);
+
+  return [...replayedDomainEvents, ...replayedOutputChunks.slice(-MAX_LIVE_OUTPUT_CHUNKS)].sort(
+    (left, right) => left.timestamp.localeCompare(right.timestamp),
+  );
+}
+
 function isAgentOutputChunk(event: RuntimeRunEvent): event is AgentOutputChunk {
   return event.type === "stdout" || event.type === "stderr";
+}
+
+function shouldPersistRunOutputReplay(event: RuntimeRunEvent): boolean {
+  return (
+    event.type === "run.status.changed" &&
+    (event.nextStatus === "blocked" ||
+      event.nextStatus === "failed" ||
+      event.nextStatus === "succeeded")
+  );
 }
 
 function isTerminalRunEvent(event: RuntimeRunEvent): boolean {
