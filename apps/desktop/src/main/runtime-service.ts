@@ -166,6 +166,10 @@ export class DefaultDesktopRuntimeService implements DesktopRuntimeService {
       this.runEventHistory.set(runId, [...initialEvents]);
     }
 
+    if (!this.replayCheckpointCursor.has(runId)) {
+      this.replayCheckpointCursor.set(runId, countOutputChunks(initialEvents));
+    }
+
     for (const event of initialEvents) {
       onEvent(event);
     }
@@ -213,9 +217,7 @@ export class DefaultDesktopRuntimeService implements DesktopRuntimeService {
       if (shouldPersistRunOutputReplay(event)) {
         void this.persistRunOutputReplay(runId);
       } else if (isAgentOutputChunk(event)) {
-        const currentChunkCount = (this.runEventHistory.get(runId) ?? []).filter(
-          isAgentOutputChunk,
-        ).length;
+        const currentChunkCount = countOutputChunks(this.runEventHistory.get(runId));
         const lastCursor = this.replayCheckpointCursor.get(runId) ?? 0;
 
         if (currentChunkCount - lastCursor >= REPLAY_CHECKPOINT_INTERVAL) {
@@ -339,6 +341,10 @@ function isDuplicateOutputChunk(
       candidate.timestamp === event.timestamp &&
       candidate.content === event.content,
   );
+}
+
+function countOutputChunks(events: readonly RuntimeRunEvent[] | undefined): number {
+  return events?.filter(isAgentOutputChunk).length ?? 0;
 }
 
 function shouldPersistRunOutputReplay(event: RuntimeRunEvent): boolean {
